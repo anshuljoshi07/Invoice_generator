@@ -1,0 +1,997 @@
+<title>Ravvarnix Solar — Quotation Dashboard</title>
+<style>
+/* ── Tokens ─────────────────────────────────────────────────── */
+:root {
+  --void:      #06080F;
+  --cell:      #0B1121;
+  --surface:   #0F1829;
+  --raised:    #152038;
+  --input-bg:  #0C1524;
+
+  --b-subtle:  rgba(148,163,184,.07);
+  --b-default: rgba(148,163,184,.13);
+  --b-amber:   rgba(245,158,11,.28);
+
+  --amber:     #F59E0B;
+  --amber-hi:  #FBBF24;
+  --amber-glow:rgba(245,158,11,.10);
+  --amber-dim: rgba(245,158,11,.06);
+
+  --green:     #4ADE80;
+  --green-dim: rgba(74,222,128,.09);
+  --blue:      #60A5FA;
+  --blue-dim:  rgba(96,165,250,.08);
+  --red:       #F87171;
+
+  --t1: #F1F5F9;
+  --t2: #94A3B8;
+  --t3: #475569;
+
+  /* solar-cell grid vars */
+  --gf: rgba(96,165,250,.035);
+  --gc: rgba(96,165,250,.09);
+
+  --r-sm: 6px;  --r-md: 10px;  --r-lg: 16px;
+  --sidebar: 220px;
+  --top: 54px;
+}
+
+:root[data-theme="light"] {
+  --void:     #DCE8F5;
+  --cell:     #EDF4FC;
+  --surface:  #FFFFFF;
+  --raised:   #F4F8FE;
+  --input-bg: #EEF4FB;
+  --b-subtle: rgba(0,0,0,.06);
+  --b-default:rgba(0,0,0,.11);
+  --b-amber:  rgba(245,158,11,.35);
+  --amber-dim:rgba(245,158,11,.07);
+  --green-dim:rgba(74,222,128,.10);
+  --blue-dim: rgba(96,165,250,.10);
+  --gf: rgba(37,99,235,.03);
+  --gc: rgba(37,99,235,.08);
+  --t1: #0F172A;  --t2: #475569;  --t3: #94A3B8;
+}
+@media (prefers-color-scheme:light){:root:not([data-theme]){
+  --void:#DCE8F5;--cell:#EDF4FC;--surface:#FFFFFF;--raised:#F4F8FE;
+  --input-bg:#EEF4FB;--b-subtle:rgba(0,0,0,.06);--b-default:rgba(0,0,0,.11);
+  --b-amber:rgba(245,158,11,.35);--amber-dim:rgba(245,158,11,.07);
+  --green-dim:rgba(74,222,128,.10);--blue-dim:rgba(96,165,250,.10);
+  --gf:rgba(37,99,235,.03);--gc:rgba(37,99,235,.08);
+  --t1:#0F172A;--t2:#475569;--t3:#94A3B8;
+}}
+
+/* ── Reset ──────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+
+body {
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  background-color:var(--void);
+  color:var(--t1);
+  height:100vh;
+  overflow:hidden;
+  background-image:
+    linear-gradient(var(--gc) 2px,transparent 2px),
+    linear-gradient(90deg,var(--gc) 2px,transparent 2px),
+    linear-gradient(var(--gf) 1px,transparent 1px),
+    linear-gradient(90deg,var(--gf) 1px,transparent 1px);
+  background-size:160px 160px,160px 160px,32px 32px,32px 32px;
+}
+
+/* ── Shell ──────────────────────────────────────────────────── */
+.app{display:grid;grid-template-columns:var(--sidebar) 1fr;height:100vh}
+
+/* ── Sidebar ────────────────────────────────────────────────── */
+.sidebar{
+  background:var(--cell);
+  border-right:1px solid var(--b-subtle);
+  display:flex;flex-direction:column;
+  position:relative;overflow:hidden;
+}
+.sidebar::after{
+  content:'';position:absolute;top:0;right:0;bottom:0;width:1px;
+  background:linear-gradient(to bottom,var(--b-amber) 0%,transparent 55%);
+  pointer-events:none;
+}
+/* subtle solar shimmer on sidebar */
+.sidebar::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 120% 60% at 50% -10%,rgba(245,158,11,.07) 0%,transparent 70%);
+  pointer-events:none;
+}
+
+.logo-area{padding:22px 20px 18px;border-bottom:1px solid var(--b-subtle);position:relative}
+.logo-mark{display:flex;align-items:center;gap:11px;margin-bottom:0}
+.logo-name{
+  display:flex;flex-direction:column;gap:1px;
+}
+.logo-name span:first-child{
+  font-size:12.5px;font-weight:800;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--t1);
+}
+.logo-name span:last-child{
+  font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--amber);
+}
+
+nav{padding:14px 10px;flex:1;display:flex;flex-direction:column;gap:1px;overflow-y:auto}
+.nav-section{
+  font-size:9px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--t3);padding:12px 10px 5px;
+}
+.nav-btn{
+  display:flex;align-items:center;gap:9px;
+  padding:8px 10px;border-radius:var(--r-sm);
+  color:var(--t2);font-size:13px;font-weight:500;
+  background:none;border:1px solid transparent;width:100%;text-align:left;
+  transition:background .12s,color .12s,border-color .12s;
+}
+.nav-btn:hover{background:var(--raised);color:var(--t1)}
+.nav-btn.active{
+  background:var(--amber-dim);color:var(--amber-hi);
+  border-color:var(--b-amber);
+}
+.nav-btn svg{flex-shrink:0;opacity:.65}
+.nav-btn.active svg{opacity:1}
+
+.sidebar-foot{
+  padding:14px 18px;border-top:1px solid var(--b-subtle);
+  font-size:9.5px;color:var(--t3);line-height:1.65;
+}
+.sidebar-foot strong{display:block;color:var(--t2);font-size:10px;margin-bottom:3px}
+
+/* ── Main ───────────────────────────────────────────────────── */
+.main{display:flex;flex-direction:column;overflow:hidden}
+
+.topbar{
+  height:var(--top);display:flex;align-items:center;
+  justify-content:space-between;padding:0 26px;
+  background:var(--cell);border-bottom:1px solid var(--b-subtle);flex-shrink:0;
+}
+.page-title{font-size:13.5px;font-weight:600;color:var(--t1)}
+.page-date{font-size:10.5px;color:var(--t3);margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:8px}
+
+.btn-icon{
+  width:30px;height:30px;border-radius:50%;
+  border:1px solid var(--b-default);background:var(--raised);
+  color:var(--t2);display:flex;align-items:center;justify-content:center;
+  transition:all .14s;
+}
+.btn-icon:hover{border-color:var(--b-amber);color:var(--amber)}
+
+.btn-primary{
+  display:flex;align-items:center;gap:6px;
+  padding:7px 15px;border-radius:var(--r-sm);
+  background:var(--amber);color:#080400;
+  font-size:12.5px;font-weight:700;border:none;
+  letter-spacing:.02em;
+  box-shadow:0 0 0 1px rgba(245,158,11,.5),0 4px 14px rgba(245,158,11,.22);
+  transition:all .14s;
+}
+.btn-primary:hover{
+  background:var(--amber-hi);transform:translateY(-1px);
+  box-shadow:0 0 0 1px rgba(251,191,36,.6),0 6px 20px rgba(245,158,11,.3);
+}
+
+/* ── Scrollable content ─────────────────────────────────────── */
+.content{
+  flex:1;overflow-y:auto;padding:22px 26px;
+  display:flex;flex-direction:column;gap:20px;
+}
+.content::-webkit-scrollbar{width:5px}
+.content::-webkit-scrollbar-thumb{background:var(--b-default);border-radius:3px}
+
+/* ── Stats row ──────────────────────────────────────────────── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+
+.stat{
+  background:var(--surface);border:1px solid var(--b-subtle);
+  border-radius:var(--r-md);padding:16px 18px;position:relative;overflow:hidden;
+  box-shadow:0 2px 8px rgba(0,0,0,.18);
+}
+.stat::before{
+  content:'';position:absolute;top:0;left:18px;right:18px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--amber),transparent);
+  opacity:.35;
+}
+.s-label{
+  font-size:9.5px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--t3);margin-bottom:7px;
+}
+.s-val{
+  font-size:20px;font-weight:700;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;line-height:1;color:var(--t1);
+}
+.s-val.amber{color:var(--amber-hi)}
+.s-val.green{color:var(--green)}
+.s-sub{font-size:10.5px;color:var(--t3);margin-top:4px}
+.s-badge{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;
+  margin-top:5px;background:var(--green-dim);color:var(--green);
+}
+
+/* ── Workspace ──────────────────────────────────────────────── */
+.workspace{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+
+/* ── Panel ──────────────────────────────────────────────────── */
+.panel{
+  background:var(--surface);border:1px solid var(--b-subtle);
+  border-radius:var(--r-lg);overflow:hidden;
+  box-shadow:0 2px 12px rgba(0,0,0,.2);
+  display:flex;flex-direction:column;
+}
+.panel-head{
+  padding:15px 20px 12px;border-bottom:1px solid var(--b-subtle);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.panel-eyebrow{
+  font-size:8.5px;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--amber);margin-bottom:3px;
+}
+.panel-title{
+  display:flex;align-items:center;gap:8px;
+  font-size:12.5px;font-weight:600;color:var(--t1);
+}
+.p-icon{
+  width:28px;height:28px;border-radius:6px;
+  background:var(--amber-dim);border:1px solid var(--b-amber);
+  color:var(--amber);display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.p-icon.blue{background:var(--blue-dim);border-color:rgba(96,165,250,.2);color:var(--blue)}
+
+.panel-body{padding:18px 20px;flex:1;overflow-y:auto}
+.panel-body::-webkit-scrollbar{width:4px}
+.panel-body::-webkit-scrollbar-thumb{background:var(--b-default);border-radius:2px}
+
+/* ── Fields ─────────────────────────────────────────────────── */
+.fgroup{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{
+  font-size:10px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--t2);
+}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.inp-wrap{position:relative;display:flex;align-items:center}
+.unit{position:absolute;right:10px;font-size:11px;color:var(--t3);pointer-events:none}
+.unit-l{position:absolute;left:10px;font-size:12px;color:var(--t3);pointer-events:none}
+
+input[type=number],input[type=text],input[type=email]{
+  width:100%;height:36px;
+  background:var(--input-bg);border:1px solid var(--b-default);
+  border-radius:var(--r-sm);color:var(--t1);
+  font-size:13px;font-weight:500;padding:0 36px 0 10px;outline:none;
+  transition:border-color .13s,box-shadow .13s;
+  font-variant-numeric:tabular-nums;
+  -moz-appearance:textfield;
+}
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
+input[type=number].pl,input[type=text].pl,input[type=email].pl{padding-left:22px}
+input:focus{border-color:var(--amber);box-shadow:0 0 0 2px var(--amber-glow)}
+
+/* ── Checkbox row ───────────────────────────────────────────── */
+.cb-row{
+  display:flex;align-items:center;gap:9px;padding:10px 12px;
+  border-radius:var(--r-sm);background:var(--raised);
+  border:1px solid var(--b-subtle);cursor:pointer;
+  transition:border-color .13s,background .13s;
+}
+.cb-row:hover{border-color:var(--b-amber);background:var(--amber-dim)}
+.cb-row input[type=checkbox]{width:14px;height:14px;accent-color:var(--amber);cursor:pointer;flex-shrink:0}
+.cb-label{font-size:12px;font-weight:500;color:var(--t1);flex:1}
+.cb-badge{
+  font-size:8.5px;font-weight:700;padding:2px 7px;border-radius:20px;
+  letter-spacing:.06em;text-transform:uppercase;
+  background:var(--green-dim);color:var(--green);
+  border:1px solid rgba(74,222,128,.2);
+}
+
+.slide-field{
+  max-height:0;opacity:0;overflow:hidden;
+  transition:max-height .28s ease,opacity .22s ease,margin-top .28s ease;
+}
+.slide-field.open{max-height:70px;opacity:1;margin-top:0}
+
+/* ── Divider ────────────────────────────────────────────────── */
+.divider{height:1px;background:var(--b-subtle);margin:16px 0}
+
+/* ── Estimate block ─────────────────────────────────────────── */
+.est-block{
+  background:var(--raised);border:1px solid var(--b-amber);
+  border-radius:var(--r-md);padding:14px 16px;
+  box-shadow:0 0 0 1px var(--b-amber),0 4px 18px rgba(245,158,11,.07);
+}
+.est-head{
+  font-size:8.5px;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--amber);margin-bottom:12px;
+}
+.est-row{
+  display:flex;justify-content:space-between;align-items:baseline;
+  padding:4px 0;border-bottom:1px solid var(--b-subtle);
+}
+.est-row:last-child{border-bottom:none}
+.e-lbl{font-size:12px;color:var(--t2)}
+.e-val{
+  font-size:12.5px;font-weight:600;color:var(--t1);
+  font-variant-numeric:tabular-nums;
+}
+.est-row.net .e-lbl{font-weight:600;color:var(--t1)}
+.est-row.net .e-val{font-weight:700}
+.est-row.sub .e-lbl,.est-row.sub .e-val{color:var(--green)}
+.est-row.total{margin-top:6px;padding-top:10px;border-top:1px solid var(--b-amber)}
+.est-row.total .e-lbl{
+  font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--t1);
+}
+.est-row.total .e-val{
+  font-size:20px;font-weight:800;color:var(--amber-hi);
+  letter-spacing:-.025em;
+}
+
+/* ── Buttons ────────────────────────────────────────────────── */
+.btn-gen{
+  width:100%;margin-top:14px;padding:10px 18px;
+  border-radius:var(--r-sm);background:var(--amber);color:#080400;
+  font-size:12px;font-weight:700;border:none;
+  text-transform:uppercase;letter-spacing:.05em;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  box-shadow:0 0 0 1px rgba(245,158,11,.4),0 4px 14px rgba(245,158,11,.18);
+  transition:all .14s;
+}
+.btn-gen:hover{background:var(--amber-hi);transform:translateY(-1px);
+  box-shadow:0 0 0 1px rgba(251,191,36,.5),0 6px 20px rgba(245,158,11,.28);}
+
+.btn-ghost{
+  padding:8px 14px;border-radius:var(--r-sm);
+  background:var(--raised);border:1px solid var(--b-default);
+  color:var(--t2);font-size:12px;font-weight:500;
+  transition:all .13s;
+}
+.btn-ghost:hover{border-color:var(--b-default);color:var(--t1);background:var(--surface)}
+
+/* ── Table ──────────────────────────────────────────────────── */
+.q-table{width:100%;border-collapse:collapse;font-size:12px}
+.q-table th{
+  text-align:left;font-size:9px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--t3);
+  padding:0 14px 9px;border-bottom:1px solid var(--b-subtle);
+}
+.q-table td{
+  padding:10px 14px;border-bottom:1px solid var(--b-subtle);
+  color:var(--t2);vertical-align:middle;
+}
+.q-table tr:last-child td{border-bottom:none}
+.q-table tbody tr{transition:background .1s}
+.q-table tbody tr:hover td{background:var(--raised)}
+
+.mono{
+  font-family:'SF Mono','Fira Code','Consolas',monospace;
+  font-size:11px;color:var(--amber);font-variant-numeric:tabular-nums;
+}
+.q-name{color:var(--t1);font-weight:500}
+.q-amt{font-variant-numeric:tabular-nums;font-weight:600;color:var(--t1);white-space:nowrap}
+
+.pill{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:20px;
+  letter-spacing:.04em;text-transform:uppercase;
+}
+.pill.sent{background:var(--blue-dim);color:var(--blue)}
+.pill.viewed{background:var(--amber-dim);color:var(--amber)}
+.pill.draft{background:rgba(148,163,184,.08);color:var(--t3)}
+.dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.dot.b{background:var(--blue)}.dot.a{background:var(--amber)}.dot.m{background:var(--t3)}
+
+.act-btn{
+  font-size:10.5px;padding:3px 8px;border-radius:5px;
+  background:none;border:1px solid transparent;color:var(--t3);
+  transition:all .12s;
+}
+.act-btn:hover{border-color:var(--b-default);color:var(--t1);background:var(--raised)}
+
+/* ── Modal ──────────────────────────────────────────────────── */
+#modal{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.55);backdrop-filter:blur(8px);
+  z-index:200;align-items:center;justify-content:center;
+}
+.modal-box{
+  background:var(--surface);border:1px solid var(--b-amber);
+  border-radius:var(--r-lg);padding:26px;width:390px;
+  box-shadow:0 0 0 1px var(--b-amber),0 24px 60px rgba(0,0,0,.5);
+}
+.modal-title{
+  font-size:10px;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--amber);margin-bottom:14px;
+}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px}
+.modal-cell{background:var(--raised);border-radius:8px;padding:11px 13px}
+.modal-cell-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.09em;color:var(--t3);margin-bottom:2px}
+.modal-cell-val{font-size:13px;font-weight:600;color:var(--t1)}
+.modal-cell-val.amber{font-size:15px;font-weight:700;color:var(--amber-hi)}
+
+.send-to-label{
+  font-size:10px;font-weight:700;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--t3);margin-bottom:9px;
+}
+.send-row{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 13px;border-radius:7px;background:var(--raised);
+  border:1px solid var(--b-subtle);margin-bottom:8px;cursor:pointer;
+}
+.send-row input[type=checkbox]{width:14px;height:14px;accent-color:var(--amber)}
+.send-info{flex:1}
+.send-info-main{font-size:12px;font-weight:500;color:var(--t1)}
+.send-info-sub{font-size:10.5px;color:var(--t3)}
+.modal-actions{display:flex;gap:8px;margin-top:18px}
+.modal-cancel{
+  flex:1;padding:9px;border-radius:6px;
+  background:var(--raised);border:1px solid var(--b-default);
+  color:var(--t2);font-size:12.5px;transition:all .13s;
+}
+.modal-cancel:hover{color:var(--t1);border-color:var(--b-amber)}
+.modal-confirm{
+  flex:2;padding:9px;border-radius:6px;
+  background:var(--amber);border:none;color:#080400;
+  font-size:12.5px;font-weight:700;
+  box-shadow:0 4px 12px rgba(245,158,11,.22);transition:all .13s;
+}
+.modal-confirm:hover{background:var(--amber-hi);box-shadow:0 4px 18px rgba(245,158,11,.32)}
+</style>
+
+<div class="app">
+
+  <!-- ── Sidebar ─────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="logo-area">
+      <div class="logo-mark">
+        <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
+          <circle cx="17" cy="17" r="7" fill="#F59E0B"/>
+          <circle cx="17" cy="17" r="9.5" stroke="#F59E0B" stroke-width=".6" stroke-opacity=".35"/>
+          <line x1="17" y1="1"  x2="17" y2="6"  stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+          <line x1="17" y1="28" x2="17" y2="33" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+          <line x1="1"  y1="17" x2="6"  y2="17" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+          <line x1="28" y1="17" x2="33" y2="17" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+          <line x1="5.5" y1="5.5"   x2="9.1" y2="9.1"   stroke="#F59E0B" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="24.9" y1="24.9" x2="28.5" y2="28.5" stroke="#F59E0B" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="28.5" y1="5.5"  x2="24.9" y2="9.1"  stroke="#F59E0B" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="9.1"  y1="24.9" x2="5.5"  y2="28.5" stroke="#F59E0B" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <div class="logo-name">
+          <span>Ravvarnix</span>
+          <span>Solar</span>
+        </div>
+      </div>
+    </div>
+
+    <nav>
+      <span class="nav-section">Workspace</span>
+      <button class="nav-btn active" onclick="showTab('dash',this)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-btn" onclick="showTab('new',this)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        New Quotation
+      </button>
+      <button class="nav-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        History
+      </button>
+      <span class="nav-section">Config</span>
+      <button class="nav-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M5.34 18.66l-1.41 1.41M20 12h-2M6 12H4M18.66 18.66l-1.41-1.41M6.75 6.75 5.34 5.34"/></svg>
+        Rate Config
+      </button>
+    </nav>
+
+    <div class="sidebar-foot">
+      <strong>Ravvarnix Renewable Energy</strong>
+      GST: 22AAPCR5712G1ZF<br>
+      Supela, Bhilai – 490023
+    </div>
+  </aside>
+
+  <!-- ── Main ────────────────────────────────────────────────── -->
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <div class="page-title" id="page-title">Quotation Dashboard</div>
+        <div class="page-date" id="page-date"></div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn-icon" onclick="toggleTheme()" title="Toggle theme">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </button>
+        <button class="btn-primary" onclick="showTab('new',null)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Quotation
+        </button>
+      </div>
+    </header>
+
+    <!-- ── Dashboard Tab ──────────────────────────────────────── -->
+    <div class="content" id="tab-dash">
+
+      <!-- Stats -->
+      <div class="stats">
+        <div class="stat">
+          <div class="s-label">Total Quotations</div>
+          <div class="s-val">47</div>
+          <div class="s-badge">↑ 12 this month</div>
+        </div>
+        <div class="stat">
+          <div class="s-label">Total Quoted Value</div>
+          <div class="s-val amber">₹1.24 Cr</div>
+          <div class="s-sub">Across all projects</div>
+        </div>
+        <div class="stat">
+          <div class="s-label">Avg. System Size</div>
+          <div class="s-val">4.2 <span style="font-size:12px;font-weight:500;color:var(--t3)">kW</span></div>
+          <div class="s-sub">Per installation</div>
+        </div>
+        <div class="stat">
+          <div class="s-label">Subsidy Projects</div>
+          <div class="s-val green">31</div>
+          <div class="s-badge">66% of total</div>
+        </div>
+      </div>
+
+      <!-- Workspace -->
+      <div class="workspace">
+
+        <!-- Cost Calculator -->
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-eyebrow">Live Estimator</div>
+              <div class="panel-title">
+                <div class="p-icon">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                </div>
+                Cost Calculator
+              </div>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="fgroup">
+              <div class="row2">
+                <div class="field">
+                  <label>Capacity</label>
+                  <div class="inp-wrap">
+                    <input type="number" id="c-cap" placeholder="4.9" step="0.1" min="0" oninput="calc()">
+                    <span class="unit">kW</span>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Rate per kW</label>
+                  <div class="inp-wrap">
+                    <span class="unit-l">₹</span>
+                    <input type="number" id="c-rate" class="pl" placeholder="33,000" step="500" min="0" oninput="calc()">
+                  </div>
+                </div>
+              </div>
+
+              <div class="field">
+                <label>GST Rate</label>
+                <div class="inp-wrap">
+                  <input type="number" id="c-gst" value="8.9" placeholder="8.9" step="0.1" min="0" oninput="calc()">
+                  <span class="unit">%</span>
+                </div>
+              </div>
+
+              <label class="cb-row" for="c-sub">
+                <input type="checkbox" id="c-sub" onchange="toggleSub('c','c-sub-wrap')">
+                <span class="cb-label">Residential under PM Surya Ghar Subsidy</span>
+                <span class="cb-badge">MNRE</span>
+              </label>
+
+              <div class="slide-field" id="c-sub-wrap">
+                <div class="field" style="margin-top:2px">
+                  <label>Subsidy Amount</label>
+                  <div class="inp-wrap">
+                    <span class="unit-l">₹</span>
+                    <input type="number" id="c-subamt" class="pl" placeholder="1,08,000" step="1000" min="0" oninput="calc()">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="est-block">
+              <div class="est-head">⚡ Estimated Cost Breakdown</div>
+              <div class="est-row">
+                <span class="e-lbl">Base Amount</span>
+                <span class="e-val" id="c-obase">—</span>
+              </div>
+              <div class="est-row">
+                <span class="e-lbl" id="c-ogst-lbl">GST (8.9%)</span>
+                <span class="e-val" id="c-ogst">—</span>
+              </div>
+              <div class="est-row net">
+                <span class="e-lbl">Net Payable</span>
+                <span class="e-val" id="c-onet">—</span>
+              </div>
+              <div class="est-row sub" id="c-osub-row" style="display:none">
+                <span class="e-lbl">MNRE Subsidy</span>
+                <span class="e-val" id="c-osub">—</span>
+              </div>
+              <div class="est-row total">
+                <span class="e-lbl" id="c-total-lbl">Total Payable</span>
+                <span class="e-val" id="c-ototal">—</span>
+              </div>
+            </div>
+
+            <button class="btn-gen" onclick="showTab('new',null)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Generate Quotation with These Values
+            </button>
+          </div>
+        </div>
+
+        <!-- Recent Quotations -->
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-eyebrow">History</div>
+              <div class="panel-title">
+                <div class="p-icon blue">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                </div>
+                Recent Quotations
+              </div>
+            </div>
+          </div>
+          <div class="panel-body" style="padding:0">
+            <table class="q-table">
+              <thead>
+                <tr>
+                  <th>Quotation No.</th>
+                  <th>Client</th>
+                  <th>Capacity</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="mono">2026-27/RRE/001</span></td>
+                  <td><span class="q-name">Ajay Verma</span></td>
+                  <td>4.9 kW</td>
+                  <td class="q-amt">₹1,53,360</td>
+                  <td><span class="pill sent"><span class="dot b"></span>Sent</span></td>
+                  <td><button class="act-btn">↓ PDF</button></td>
+                </tr>
+                <tr>
+                  <td><span class="mono">2026-27/RRE/002</span></td>
+                  <td><span class="q-name">Sunita Patel</span></td>
+                  <td>3.0 kW</td>
+                  <td class="q-amt">₹1,07,370</td>
+                  <td><span class="pill viewed"><span class="dot a"></span>Viewed</span></td>
+                  <td><button class="act-btn">↓ PDF</button></td>
+                </tr>
+                <tr>
+                  <td><span class="mono">2026-27/RRE/003</span></td>
+                  <td><span class="q-name">Ramesh Kumar</span></td>
+                  <td>6.5 kW</td>
+                  <td class="q-amt">₹2,34,300</td>
+                  <td><span class="pill sent"><span class="dot b"></span>Sent</span></td>
+                  <td><button class="act-btn">↓ PDF</button></td>
+                </tr>
+                <tr>
+                  <td><span class="mono">2026-27/RRE/004</span></td>
+                  <td><span class="q-name">Meena Sahu</span></td>
+                  <td>2.0 kW</td>
+                  <td class="q-amt">₹71,580</td>
+                  <td><span class="pill draft"><span class="dot m"></span>Draft</span></td>
+                  <td><button class="act-btn">Edit</button></td>
+                </tr>
+                <tr>
+                  <td><span class="mono">2026-27/RRE/005</span></td>
+                  <td><span class="q-name">Vikas Thakur</span></td>
+                  <td>10.0 kW</td>
+                  <td class="q-amt">₹3,59,700</td>
+                  <td><span class="pill sent"><span class="dot b"></span>Sent</span></td>
+                  <td><button class="act-btn">↓ PDF</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /workspace -->
+    </div><!-- /tab-dash -->
+
+    <!-- ── New Quotation Tab ──────────────────────────────────── -->
+    <div class="content" id="tab-new" style="display:none">
+      <div class="panel" style="max-width:660px">
+        <div class="panel-head">
+          <div>
+            <div class="panel-eyebrow">Invoice Generator</div>
+            <div class="panel-title">
+              <div class="p-icon">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+              </div>
+              New Quotation
+            </div>
+          </div>
+          <button class="btn-ghost" onclick="showTab('dash',null)">← Back</button>
+        </div>
+        <div class="panel-body">
+
+          <!-- A: Meta -->
+          <div style="margin-bottom:20px">
+            <div class="panel-eyebrow" style="margin-bottom:11px">A — Quotation Details</div>
+            <div class="row2">
+              <div class="field">
+                <label>Quotation Number</label>
+                <input type="text" id="q-num" value="2026-27/RRE/006">
+              </div>
+              <div class="field">
+                <label>Date</label>
+                <input type="text" id="q-date">
+              </div>
+            </div>
+          </div>
+
+          <!-- B: Client -->
+          <div style="margin-bottom:20px">
+            <div class="panel-eyebrow" style="margin-bottom:11px">B — Client Details</div>
+            <div class="fgroup" style="gap:10px">
+              <div class="row2">
+                <div class="field">
+                  <label>Client Name <span style="color:var(--amber);font-style:normal">*</span></label>
+                  <input type="text" id="q-cname" placeholder="e.g. Ajay Verma">
+                </div>
+                <div class="field">
+                  <label>Address</label>
+                  <input type="text" id="q-caddr" placeholder="Full address">
+                </div>
+              </div>
+              <div class="row2">
+                <div class="field">
+                  <label>Email <span style="color:var(--amber)">* required</span></label>
+                  <input type="email" id="q-email" placeholder="client@email.com">
+                </div>
+                <div class="field">
+                  <label>Phone <span style="color:var(--amber)">* required</span></label>
+                  <input type="text" id="q-phone" placeholder="+91 98765 43210">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- C: Project -->
+          <div style="margin-bottom:20px">
+            <div class="panel-eyebrow" style="margin-bottom:11px">C — Project Details</div>
+            <div class="fgroup" style="gap:10px">
+              <div class="row2">
+                <div class="field">
+                  <label>Capacity</label>
+                  <div class="inp-wrap">
+                    <input type="number" id="q-cap" placeholder="4.9" step="0.1" min="0" oninput="calcQ()">
+                    <span class="unit">kW</span>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Rate per kW</label>
+                  <div class="inp-wrap">
+                    <span class="unit-l">₹</span>
+                    <input type="number" id="q-rate" class="pl" placeholder="33,000" step="500" min="0" oninput="calcQ()">
+                  </div>
+                </div>
+              </div>
+              <div class="field">
+                <label>GST %</label>
+                <div class="inp-wrap">
+                  <input type="number" id="q-gst" value="8.9" step="0.1" min="0" oninput="calcQ()">
+                  <span class="unit">%</span>
+                </div>
+              </div>
+              <label class="cb-row" for="q-sub">
+                <input type="checkbox" id="q-sub" onchange="toggleSub('q','q-sub-wrap');calcQ()">
+                <span class="cb-label">Residential under PM Surya Ghar Subsidy</span>
+                <span class="cb-badge">MNRE</span>
+              </label>
+              <div class="slide-field" id="q-sub-wrap">
+                <div class="field" style="margin-top:2px">
+                  <label>Subsidy Amount</label>
+                  <div class="inp-wrap">
+                    <span class="unit-l">₹</span>
+                    <input type="number" id="q-subamt" class="pl" placeholder="1,08,000" step="1000" min="0" oninput="calcQ()">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Estimate preview -->
+          <div class="est-block" style="margin-bottom:18px">
+            <div class="est-head">⚡ Estimate Preview</div>
+            <div class="est-row">
+              <span class="e-lbl">Base Amount</span>
+              <span class="e-val" id="q-obase">—</span>
+            </div>
+            <div class="est-row">
+              <span class="e-lbl" id="q-ogst-lbl">GST (8.9%)</span>
+              <span class="e-val" id="q-ogst">—</span>
+            </div>
+            <div class="est-row net">
+              <span class="e-lbl">Net Payable</span>
+              <span class="e-val" id="q-onet">—</span>
+            </div>
+            <div class="est-row sub" id="q-osub-row" style="display:none">
+              <span class="e-lbl">MNRE Subsidy</span>
+              <span class="e-val" id="q-osub">—</span>
+            </div>
+            <div class="est-row total">
+              <span class="e-lbl">Effective Cost</span>
+              <span class="e-val" id="q-ototal">—</span>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div style="display:flex;gap:8px">
+            <button class="btn-ghost" style="flex:1;padding:9px 0;font-size:12px">Save Draft</button>
+            <button class="btn-ghost" style="flex:1;padding:9px 0;font-size:12px">Preview PDF</button>
+            <button class="btn-gen" style="flex:2;margin-top:0" onclick="openModal()">
+              Generate &amp; Send
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div><!-- /tab-new -->
+
+  </main>
+</div>
+
+<!-- ── Confirm Modal ──────────────────────────────────────────── -->
+<div id="modal">
+  <div class="modal-box">
+    <div class="modal-title">Confirm &amp; Send Quotation</div>
+    <div class="modal-grid">
+      <div class="modal-cell">
+        <div class="modal-cell-lbl">Quotation</div>
+        <div class="modal-cell-val mono" id="m-num" style="font-size:12px">—</div>
+      </div>
+      <div class="modal-cell">
+        <div class="modal-cell-lbl">Effective Cost</div>
+        <div class="modal-cell-val amber" id="m-amt">—</div>
+      </div>
+    </div>
+    <div class="send-to-label">Sending to</div>
+    <label class="send-row">
+      <input type="checkbox" checked>
+      <div class="send-info">
+        <div class="send-info-main">📧 Email</div>
+        <div class="send-info-sub" id="m-email">—</div>
+      </div>
+    </label>
+    <label class="send-row">
+      <input type="checkbox" checked>
+      <div class="send-info">
+        <div class="send-info-main">💬 WhatsApp / SMS</div>
+        <div class="send-info-sub" id="m-phone">—</div>
+      </div>
+    </label>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-confirm" onclick="closeModal()">Confirm &amp; Generate PDF</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Init ─────────────────────────────────────────────────────
+const now = new Date();
+const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+document.getElementById('page-date').textContent =
+  `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+
+const dd = String(now.getDate()).padStart(2,'0');
+const mm = String(now.getMonth()+1).padStart(2,'0');
+document.getElementById('q-date').value = `${dd}.${mm}.${now.getFullYear()}`;
+
+// ── Indian number format ──────────────────────────────────────
+function inr(n) {
+  if (!n && n !== 0) return '—';
+  return '₹' + Math.round(n).toLocaleString('en-IN');
+}
+
+// ── Calculator (dashboard) ────────────────────────────────────
+function calc() {
+  const cap  = +document.getElementById('c-cap').value || 0;
+  const rate = +document.getElementById('c-rate').value || 0;
+  const gst  = +document.getElementById('c-gst').value || 0;
+  const isSub= document.getElementById('c-sub').checked;
+  const sub  = isSub ? (+document.getElementById('c-subamt').value || 0) : 0;
+
+  const base = cap * rate;
+  const gstAmt = base * gst / 100;
+  const net = base + gstAmt;
+  const effective = net - sub;
+
+  document.getElementById('c-obase').textContent = base ? inr(base) : '—';
+  document.getElementById('c-ogst-lbl').textContent = `GST (${gst}%)`;
+  document.getElementById('c-ogst').textContent = gstAmt ? inr(gstAmt) : '—';
+  document.getElementById('c-onet').textContent = net ? inr(net) : '—';
+  document.getElementById('c-total-lbl').textContent = isSub ? 'Effective Cost' : 'Total Payable';
+  document.getElementById('c-ototal').textContent = base ? inr(effective) : '—';
+  const subRow = document.getElementById('c-osub-row');
+  if (isSub && sub) {
+    subRow.style.display = 'flex';
+    document.getElementById('c-osub').textContent = '− ' + inr(sub);
+  } else { subRow.style.display = 'none'; }
+}
+
+// ── Calculator (quotation form) ───────────────────────────────
+function calcQ() {
+  const cap  = +document.getElementById('q-cap').value || 0;
+  const rate = +document.getElementById('q-rate').value || 0;
+  const gst  = +document.getElementById('q-gst').value || 0;
+  const isSub= document.getElementById('q-sub').checked;
+  const sub  = isSub ? (+document.getElementById('q-subamt').value || 0) : 0;
+
+  const base = cap * rate;
+  const gstAmt = base * gst / 100;
+  const net = base + gstAmt;
+  const effective = net - sub;
+
+  document.getElementById('q-obase').textContent = base ? inr(base) : '—';
+  document.getElementById('q-ogst-lbl').textContent = `GST (${gst}%)`;
+  document.getElementById('q-ogst').textContent = gstAmt ? inr(gstAmt) : '—';
+  document.getElementById('q-onet').textContent = net ? inr(net) : '—';
+  document.getElementById('q-ototal').textContent = base ? inr(effective) : '—';
+  const subRow = document.getElementById('q-osub-row');
+  if (isSub && sub) {
+    subRow.style.display = 'flex';
+    document.getElementById('q-osub').textContent = '− ' + inr(sub);
+  } else { subRow.style.display = 'none'; }
+}
+
+// ── Toggle subsidy slide ──────────────────────────────────────
+function toggleSub(prefix, wrapId) {
+  const checked = document.getElementById(prefix + '-sub').checked;
+  document.getElementById(wrapId).classList.toggle('open', checked);
+  if (prefix === 'c') calc(); else calcQ();
+}
+
+// ── Tab switching ─────────────────────────────────────────────
+const tabs = { dash: 'tab-dash', new: 'tab-new' };
+const titles = { dash: 'Quotation Dashboard', new: 'New Quotation' };
+function showTab(key, btn) {
+  Object.values(tabs).forEach(id => document.getElementById(id).style.display = 'none');
+  document.getElementById(tabs[key]).style.display = 'flex';
+  document.getElementById('page-title').textContent = titles[key];
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  else {
+    const idx = key === 'dash' ? 0 : 1;
+    document.querySelectorAll('.nav-btn')[idx]?.classList.add('active');
+  }
+}
+
+// ── Modal ─────────────────────────────────────────────────────
+function openModal() {
+  document.getElementById('m-num').textContent = document.getElementById('q-num').value || '—';
+  document.getElementById('m-amt').textContent = document.getElementById('q-ototal').textContent;
+  document.getElementById('m-email').textContent = document.getElementById('q-email').value || 'Not entered';
+  document.getElementById('m-phone').textContent = document.getElementById('q-phone').value || 'Not entered';
+  document.getElementById('modal').style.display = 'flex';
+}
+function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+// ── Theme ─────────────────────────────────────────────────────
+function toggleTheme() {
+  const r = document.documentElement;
+  r.setAttribute('data-theme', r.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+}
+</script>
