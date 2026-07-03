@@ -905,12 +905,12 @@ function openPreview(){
 
   const N=n=>n?Math.round(n).toLocaleString('en-IN'):'—';
   const capLabel=cap?cap+' kW':'—';
-  const subsidyRow=isSub?`
+  const subsidyRow=(isSub && sub>0)?`
     <tr>
       <td class="center">3</td>
       <td>Subsidy amount to be claimed directly from MNRE by the consumer (Refer Note 7)</td>
       <td class="center">—</td><td class="center">—</td>
-      <td class="right">${N(sub)}</td>
+      <td class="right">(−) ${N(sub)}</td>
     </tr>
     <tr class="eff-row">
       <td colspan="4" class="bold">Effective cost of the system</td>
