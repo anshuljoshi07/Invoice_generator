@@ -336,18 +336,17 @@ input.err{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(220,38,38,
 
 /* A4 sheet */
 .pdf-page{
-  background:#fff;width:794px;min-height:1123px;margin:0 auto;
-  padding:40px 44px;box-shadow:0 4px 20px rgba(0,0,0,.3);
+  background:#fff url('assets/letterhead.png') no-repeat top left / 100% auto;
+  width:794px;min-height:1123px;margin:0 auto;
+  padding:128px 44px 90px 44px;
+  box-shadow:0 4px 20px rgba(0,0,0,.3);
   font-family:'Times New Roman',Times,serif;color:#1a1a1a;font-size:10pt;
 }
-
-/* PDF internal styles */
-.pdf-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #1A6B2C}
-.pdf-logo-block{display:flex;align-items:center;gap:10px}
-.pdf-logo-text .pn{font-size:14pt;font-weight:700;letter-spacing:.08em;color:#1A6B2C;text-transform:uppercase}
-.pdf-logo-text .ps{font-size:8pt;letter-spacing:.15em;color:#888;text-transform:uppercase}
-.pdf-company-details{text-align:right;font-size:8.5pt;line-height:1.7;color:#444}
-.pdf-company-details strong{display:block;font-size:9pt;color:#111;margin-bottom:2px}
+/* GST bar just below the pre-printed letterhead header */
+.pdf-gst-bar{
+  font-size:8pt;color:#444;text-align:right;margin-bottom:10px;
+  padding-bottom:6px;border-bottom:1px solid #C8E6C9;
+}
 
 .pdf-meta{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:14px}
 .pdf-meta-left,.pdf-meta-right{padding:10px 12px;font-size:8.5pt;line-height:1.8}
@@ -392,6 +391,12 @@ input.err{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(220,38,38,
 .pdf-bank-title{font-size:9pt;font-weight:700;text-align:center;background:#E8F5EA;border:1px solid #C8E6C9;padding:4px 8px;margin-bottom:0}
 .pdf-bank-table{width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:24px}
 .pdf-bank-table td{border:1px solid #C8E6C9;padding:5px 8px}
+
+.pdf-pay-title{font-size:9pt;font-weight:700;text-align:center;background:#E8F5EA;border:1px solid #C8E6C9;padding:4px 8px;margin-bottom:0;margin-top:18px}
+.pdf-pay-table{width:100%;border-collapse:collapse;font-size:9pt;margin-bottom:24px}
+.pdf-pay-table td{border:1px solid #C8E6C9;padding:6px 10px}
+.pdf-pay-table tr:last-child{font-weight:700;background:#f9fde5}
+.pdf-pay-table .right{text-align:right;font-variant-numeric:tabular-nums}
 
 .pdf-sign{text-align:right;font-size:9pt;padding-top:10px;border-top:1px solid #ddd}
 .pdf-sign strong{font-size:9.5pt}
@@ -703,6 +708,19 @@ input.err{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(220,38,38,
             <div class="est-row total"><span class="e-lbl">Effective Cost</span><span class="e-val" id="q-ototal">—</span></div>
           </div>
 
+          <div class="sec-label">E — Advance Payment &amp; Dues</div>
+          <div class="form-row">
+            <div class="f-group" style="max-width:160px">
+              <label class="f-label">Advance %</label>
+              <input type="number" id="q-advpct" value="50" step="5" min="0" max="100" oninput="calcQ()">
+            </div>
+          </div>
+          <div class="est-block" style="margin-bottom:16px">
+            <div class="est-head">Payment Schedule</div>
+            <div class="est-row"><span class="e-lbl" id="q-oadv-l">Advance at Registration (50%)</span><span class="e-val" id="q-oadv">—</span></div>
+            <div class="est-row total"><span class="e-lbl">Balance Due (before dispatch)</span><span class="e-val" id="q-obal">—</span></div>
+          </div>
+
           <div style="display:flex;gap:8px">
             <button class="btn-ghost" style="flex:1;padding:9px 0;font-size:12px">Save Draft</button>
             <button class="btn-ghost" style="flex:1;padding:9px 0;font-size:12px" onclick="openPreview()">Preview PDF</button>
@@ -830,6 +848,14 @@ function calcQ(){
   const sr=document.getElementById('q-osr');
   if(isSub&&sub){sr.style.display='flex';document.getElementById('q-osub').textContent='− '+inr(sub);}
   else sr.style.display='none';
+  // Advance & dues
+  const advPct=+document.getElementById('q-advpct').value||50;
+  const finalAmt=base?eff:0;
+  const advAmt=finalAmt*(advPct/100);
+  const bal=finalAmt-advAmt;
+  document.getElementById('q-oadv-l').textContent=`Advance at Registration (${advPct}%)`;
+  document.getElementById('q-oadv').textContent=finalAmt?inr(advAmt):'—';
+  document.getElementById('q-obal').textContent=finalAmt?inr(bal):'—';
 }
 
 // ── Toggle subsidy slide ──────────────────────────────────────
@@ -901,7 +927,11 @@ function openPreview(){
   const gst=+document.getElementById('q-gst').value||0;
   const isSub=document.getElementById('q-sub').checked;
   const sub=isSub?(+document.getElementById('q-subamt').value||0):0;
+  const advPct=+document.getElementById('q-advpct').value||50;
   const base=cap*rate,gstAmt=base*gst/100,net=base+gstAmt,eff=net-sub;
+  const finalAmt=base?eff:0;
+  const advAmt=finalAmt*(advPct/100);
+  const balAmt=finalAmt-advAmt;
 
   const N=n=>n?Math.round(n).toLocaleString('en-IN'):'—';
   const capLabel=cap?cap+' kW':'—';
@@ -920,34 +950,7 @@ function openPreview(){
 
   document.getElementById('pdf-title').textContent=`Preview — ${num}`;
   document.getElementById('pdf-content').innerHTML=`
-    <!-- Header -->
-    <div class="pdf-header">
-      <div class="pdf-logo-block">
-        <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
-          <circle cx="19" cy="19" r="8" fill="#1A6B2C"/>
-          <circle cx="19" cy="19" r="10.5" stroke="#1A6B2C" stroke-width=".7" stroke-opacity=".35"/>
-          <line x1="19" y1="1" x2="19" y2="7" stroke="#1A6B2C" stroke-width="2.2" stroke-linecap="round"/>
-          <line x1="19" y1="31" x2="19" y2="37" stroke="#1A6B2C" stroke-width="2.2" stroke-linecap="round"/>
-          <line x1="1" y1="19" x2="7" y2="19" stroke="#1A6B2C" stroke-width="2.2" stroke-linecap="round"/>
-          <line x1="31" y1="19" x2="37" y2="19" stroke="#1A6B2C" stroke-width="2.2" stroke-linecap="round"/>
-          <line x1="6" y1="6" x2="9.9" y2="9.9" stroke="#1A6B2C" stroke-width="2" stroke-linecap="round"/>
-          <line x1="28.1" y1="28.1" x2="32" y2="32" stroke="#1A6B2C" stroke-width="2" stroke-linecap="round"/>
-          <line x1="32" y1="6" x2="28.1" y2="9.9" stroke="#1A6B2C" stroke-width="2" stroke-linecap="round"/>
-          <line x1="9.9" y1="28.1" x2="6" y2="32" stroke="#1A6B2C" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-        <div class="pdf-logo-text">
-          <div class="pn">Ravvarnix</div>
-          <div class="ps">Solar</div>
-        </div>
-      </div>
-      <div class="pdf-company-details">
-        <strong>Ravvarnix Renewable Energy Innovations Ltd.</strong>
-        Old SBI Road, Near Post Office, Ram Nagar,<br>
-        Supela, Bhilai – 490023<br>
-        GST No.: 22AAPCR5712G1ZF<br>
-        E-mail: ravvarnixsolar@gmail.com &nbsp;|&nbsp; Contact: 9691977558
-      </div>
-    </div>
+    <div class="pdf-gst-bar">GST No.: 22AAPCR5712G1ZF &nbsp;|&nbsp; ravvarnixsolar@gmail.com &nbsp;|&nbsp; +91 9691977558</div>
 
     <!-- Meta -->
     <div class="pdf-meta">
@@ -1036,6 +1039,23 @@ function openPreview(){
         <tr><td class="td-num">8</td><td><strong>Customer Scope</strong> – Regular cleaning of PV modules; insurance of PV Solar system by client; safe storage and access to site.</td></tr>
         <tr><td class="td-num">9</td><td><strong>Bank Account Details</strong><br>Bank Name: HDFC Bank &nbsp;|&nbsp; IFSC: HDFC0000734<br>Account No.: 50200120103614 &nbsp;|&nbsp; Account type: Current Account</td></tr>
       </tbody>
+    </table>
+
+    <!-- Payment Schedule -->
+    <div class="pdf-pay-title">ADVANCE PAYMENT &amp; DUES</div>
+    <table class="pdf-pay-table">
+      <tr>
+        <td>Total Amount</td>
+        <td class="right">₹${N(finalAmt)||'—'}</td>
+      </tr>
+      <tr>
+        <td>${advPct}% Advance at time of registration</td>
+        <td class="right">₹${N(advAmt)||'—'}</td>
+      </tr>
+      <tr>
+        <td>Balance Due (before dispatch of material)</td>
+        <td class="right">₹${N(balAmt)||'—'}</td>
+      </tr>
     </table>
 
     <!-- Signature -->
