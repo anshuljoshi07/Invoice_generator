@@ -337,17 +337,16 @@ input.err{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(220,38,38,
 
 /* A4 sheet */
 .pdf-page{
-  background:#fff url('assets/letterhead.png') no-repeat top left / 100% auto;
-  width:794px;min-height:1123px;margin:0 auto;
-  padding:128px 44px 90px 44px;
-  box-shadow:0 4px 20px rgba(0,0,0,.3);
+  background:#fff;width:794px;min-height:1123px;margin:0 auto;
+  padding:40px 44px 60px 44px;box-shadow:0 4px 20px rgba(0,0,0,.3);
   font-family:'Times New Roman',Times,serif;color:#1a1a1a;font-size:10pt;
 }
-/* GST bar just below the pre-printed letterhead header */
-.pdf-gst-bar{
-  font-size:8pt;color:#444;text-align:right;margin-bottom:10px;
-  padding-bottom:6px;border-bottom:1px solid #C8E6C9;
-}
+
+/* PDF header */
+.pdf-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #1A6B2C}
+.pdf-logo-img{height:72px;width:auto;object-fit:contain}
+.pdf-company-details{text-align:right;font-size:8.5pt;line-height:1.7;color:#444}
+.pdf-company-details strong{display:block;font-size:9pt;color:#111;margin-bottom:2px}
 
 .pdf-meta{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:14px}
 .pdf-meta-left,.pdf-meta-right{padding:10px 12px;font-size:8.5pt;line-height:1.8}
@@ -959,7 +958,17 @@ function openPreview(){
 
   document.getElementById('pdf-title').textContent=`Preview — ${num}`;
   document.getElementById('pdf-content').innerHTML=`
-    <div class="pdf-gst-bar">GST No.: 22AAPCR5712G1ZF &nbsp;|&nbsp; ravvarnixsolar@gmail.com &nbsp;|&nbsp; +91 9691977558</div>
+    <!-- Header -->
+    <div class="pdf-header">
+      <img class="pdf-logo-img" src="assets/logo.jpeg" alt="Ravvarnix Solar">
+      <div class="pdf-company-details">
+        <strong>Ravvarnix Renewable Energy Innovations Ltd.</strong>
+        Old SBI Road, Near Post Office, Ram Nagar,<br>
+        Supela, Bhilai – 490023<br>
+        GST No.: 22AAPCR5712G1ZF<br>
+        E-mail: ravvarnixsolar@gmail.com &nbsp;|&nbsp; Contact: 9691977558
+      </div>
+    </div>
 
     <!-- Meta -->
     <div class="pdf-meta">
