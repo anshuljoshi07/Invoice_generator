@@ -331,6 +331,13 @@ input.err{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(220,38,38,
   cursor:pointer;transition:background .12s;
 }
 .pdf-toolbar-close:hover{background:rgba(255,255,255,.22)}
+.btn-dl{
+  display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:6px;
+  background:#1A6B2C;border:none;color:#fff;font-size:12px;font-weight:600;
+  cursor:pointer;transition:background .12s;
+}
+.btn-dl:hover{background:#155723}
+.btn-dl:disabled{background:#555;cursor:not-allowed}
 .pdf-scroll{overflow-y:auto;padding:16px;flex:1}
 .pdf-scroll::-webkit-scrollbar{width:6px}
 .pdf-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:3px}
@@ -776,7 +783,7 @@ input.err{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(220,38,38,
     </label>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal('send-modal')">Cancel</button>
-      <button class="btn-confirm" onclick="closeModal('send-modal')">Confirm &amp; Generate PDF</button>
+      <button class="btn-confirm" onclick="sendInvoice()">Confirm &amp; Send</button>
     </div>
   </div>
 </div>
@@ -786,7 +793,10 @@ input.err{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(220,38,38,
   <div class="pdf-wrap">
     <div class="pdf-toolbar">
       <span class="pdf-toolbar-title" id="pdf-title">Quotation Preview</span>
-      <button class="pdf-toolbar-close" onclick="closeModal('pdf-modal')">✕</button>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="btn-dl" id="btn-dl" onclick="downloadPDF()">&#8595; Download PDF</button>
+        <button class="pdf-toolbar-close" onclick="closeModal('pdf-modal')">✕</button>
+      </div>
     </div>
     <div class="pdf-scroll">
       <div class="pdf-page" id="pdf-content">
@@ -795,6 +805,9 @@ input.err{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(220,38,38,
     </div>
   </div>
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
 // ── Init ──────────────────────────────────────────────────────
@@ -921,6 +934,108 @@ function openSendModal(){
 }
 
 function closeModal(id){document.getElementById(id).classList.remove('open')}
+
+// ── Download PDF ──────────────────────────────────────────────
+async function downloadPDF(){
+  // Render preview if modal isn't already open
+  const modal=document.getElementById('pdf-modal');
+  const wasOpen=modal.classList.contains('open');
+  if(!wasOpen){openPreview();}
+  // Wait for images (logo) to load
+  await new Promise(r=>setTimeout(r,600));
+  const btn=document.getElementById('btn-dl');
+  btn.disabled=true;btn.textContent='Generating…';
+  try{
+    const page=document.getElementById('pdf-content');
+    const canvas=await html2canvas(page,{scale:2,useCORS:true,allowTaint:true,backgroundColor:'#ffffff'});
+    const imgData=canvas.toDataURL('image/jpeg',0.97);
+    const {jsPDF}=window.jspdf;
+    const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const pdfW=pdf.internal.pageSize.getWidth();
+    const pdfH=pdf.internal.pageSize.getHeight();
+    const imgH=pdfW*(canvas.height/canvas.width);
+    if(imgH<=pdfH){
+      pdf.addImage(imgData,'JPEG',0,0,pdfW,imgH);
+    }else{
+      let y=0;
+      while(y<imgH){
+        if(y>0)pdf.addPage();
+        pdf.addImage(imgData,'JPEG',0,-y,pdfW,imgH);
+        y+=pdfH;
+      }
+    }
+    const num=(document.getElementById('q-num').value||'quotation').replace(/[^a-zA-Z0-9\-_]/g,'_');
+    const cname=(document.getElementById('q-cname').value||'client').split(' ')[0];
+    pdf.save(`Ravvarnix_${num}_${cname}.pdf`);
+  }finally{
+    btn.disabled=false;btn.textContent='↓ Download PDF';
+    if(!wasOpen)closeModal('pdf-modal');
+  }
+}
+
+// ── Send Invoice (mailto + WhatsApp) ──────────────────────────
+function sendInvoice(){
+  const num=document.getElementById('q-num').value||'—';
+  const cname=document.getElementById('q-cname').value||'—';
+  const cemail=document.getElementById('q-email').value;
+  const cphone=document.getElementById('q-phone').value;
+  const cap=+document.getElementById('q-cap').value||0;
+  const rate=+document.getElementById('q-rate').value||0;
+  const gst=+document.getElementById('q-gst').value||0;
+  const isSub=document.getElementById('q-sub').checked;
+  const sub=isSub?(+document.getElementById('q-subamt').value||0):0;
+  const base=cap*rate,gstAmt=base*gst/100,net=base+gstAmt,eff=net-sub;
+  const amt=inr(base?eff:0);
+  const advPct=+document.getElementById('q-advpct').value||50;
+  const advAmt=inr((base?eff:0)*(advPct/100));
+
+  const emailSubject=encodeURIComponent(`Solar Quotation ${num} — Ravvarnix Renewable Energy`);
+  const emailBody=encodeURIComponent(
+`Dear ${cname},
+
+Thank you for your interest in Ravvarnix Solar.
+
+Your solar project quotation is ready:
+
+  Quotation No : ${num}
+  Capacity     : ${cap} kW
+  Effective Cost: ${amt}
+  Advance (${advPct}%): ${advAmt}
+
+Please feel free to reach out with any questions.
+
+Warm regards,
+Ravvarnix Renewable Energy Innovations Ltd.
+Phone: 9691977558 | ravvarnixsolar@gmail.com`);
+
+  const waText=encodeURIComponent(
+`Hello ${cname} 👋
+
+Your solar project quotation from *Ravvarnix Solar* is ready!
+
+📋 *Quotation No:* ${num}
+⚡ *Capacity:* ${cap} kW
+💰 *Total Cost:* ${amt}
+✅ *Advance (${advPct}%):* ${advAmt}
+
+For queries: 9691977558
+📧 ravvarnixsolar@gmail.com
+
+_Ravvarnix Renewable Energy Innovations Ltd._`);
+
+  const doEmail=document.getElementById('chk-email').checked;
+  const doWa=document.getElementById('chk-wa').checked;
+
+  closeModal('send-modal');
+
+  if(doEmail&&cemail){
+    window.location.href=`mailto:${cemail}?subject=${emailSubject}&body=${emailBody}`;
+  }
+  if(doWa&&cphone){
+    const clean='91'+cphone.replace(/\D/g,'').slice(-10);
+    setTimeout(()=>window.open(`https://wa.me/${clean}?text=${waText}`,'_blank'),400);
+  }
+}
 
 // ── PDF Preview ───────────────────────────────────────────────
 function openPreview(){
