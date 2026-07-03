@@ -214,6 +214,7 @@ input.err{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(220,38,38,
 .est-row:last-child{border-bottom:none}
 .e-lbl{font-size:12px;color:var(--t2)}
 .e-val{font-size:12.5px;font-weight:600;color:var(--t1);font-variant-numeric:tabular-nums}
+.e-val.dim{color:#CBD5E1 !important;font-weight:400}
 .est-row.net .e-lbl{font-weight:600;color:var(--t1)}
 .est-row.sub .e-lbl,.est-row.sub .e-val{color:#16a34a}
 .est-row.total{padding-top:10px;margin-top:6px;border-top:1px solid rgba(26,107,44,.25)}
@@ -812,6 +813,14 @@ function inr(n){
   if(!n&&n!==0)return'—';
   return'₹'+Math.round(n).toLocaleString('en-IN');
 }
+// ── Set value with dim state for placeholder ──────────────────
+function sv(id,val){
+  const el=document.getElementById(id);
+  el.textContent=val;
+  el.classList.toggle('dim',val==='—');
+}
+// Dim all e-val placeholders on load
+document.querySelectorAll('.e-val').forEach(el=>{if(el.textContent==='—')el.classList.add('dim');});
 
 // ── Calculator (dashboard) ────────────────────────────────────
 function calc(){
@@ -821,14 +830,14 @@ function calc(){
   const isSub=document.getElementById('c-sub').checked;
   const sub=isSub?(+document.getElementById('c-subamt').value||0):0;
   const base=cap*rate, gstAmt=base*gst/100, net=base+gstAmt, eff=net-sub;
-  document.getElementById('c-obase').textContent=base?inr(base):'—';
+  sv('c-obase',base?inr(base):'—');
   document.getElementById('c-ogst-l').textContent=`GST (${gst}%)`;
-  document.getElementById('c-ogst').textContent=gstAmt?inr(gstAmt):'—';
-  document.getElementById('c-onet').textContent=net?inr(net):'—';
+  sv('c-ogst',gstAmt?inr(gstAmt):'—');
+  sv('c-onet',net?inr(net):'—');
   document.getElementById('c-total-l').textContent=isSub?'Effective Cost':'Total Payable';
-  document.getElementById('c-ototal').textContent=base?inr(eff):'—';
+  sv('c-ototal',base?inr(eff):'—');
   const sr=document.getElementById('c-osr');
-  if(isSub&&sub){sr.style.display='flex';document.getElementById('c-osub').textContent='− '+inr(sub);}
+  if(isSub&&sub){sr.style.display='flex';sv('c-osub','− '+inr(sub));}
   else sr.style.display='none';
 }
 
@@ -840,13 +849,13 @@ function calcQ(){
   const isSub=document.getElementById('q-sub').checked;
   const sub=isSub?(+document.getElementById('q-subamt').value||0):0;
   const base=cap*rate, gstAmt=base*gst/100, net=base+gstAmt, eff=net-sub;
-  document.getElementById('q-obase').textContent=base?inr(base):'—';
+  sv('q-obase',base?inr(base):'—');
   document.getElementById('q-ogst-l').textContent=`GST (${gst}%)`;
-  document.getElementById('q-ogst').textContent=gstAmt?inr(gstAmt):'—';
-  document.getElementById('q-onet').textContent=net?inr(net):'—';
-  document.getElementById('q-ototal').textContent=base?inr(eff):'—';
+  sv('q-ogst',gstAmt?inr(gstAmt):'—');
+  sv('q-onet',net?inr(net):'—');
+  sv('q-ototal',base?inr(eff):'—');
   const sr=document.getElementById('q-osr');
-  if(isSub&&sub){sr.style.display='flex';document.getElementById('q-osub').textContent='− '+inr(sub);}
+  if(isSub&&sub){sr.style.display='flex';sv('q-osub','− '+inr(sub));}
   else sr.style.display='none';
   // Advance & dues
   const advPct=+document.getElementById('q-advpct').value||50;
@@ -854,8 +863,8 @@ function calcQ(){
   const advAmt=finalAmt*(advPct/100);
   const bal=finalAmt-advAmt;
   document.getElementById('q-oadv-l').textContent=`Advance at Registration (${advPct}%)`;
-  document.getElementById('q-oadv').textContent=finalAmt?inr(advAmt):'—';
-  document.getElementById('q-obal').textContent=finalAmt?inr(bal):'—';
+  sv('q-oadv',finalAmt?inr(advAmt):'—');
+  sv('q-obal',finalAmt?inr(bal):'—');
 }
 
 // ── Toggle subsidy slide ──────────────────────────────────────
