@@ -1,520 +1,519 @@
-# Invoice Generator — Implementation Plan
+# Ravvarnix Invoice Generator — Implementation Plan
 
 ---
 
-## 1. Product Overview
+## 1. Project Overview
 
-A web-based dashboard that lets users fill in invoice details (client info, line items, tax, branding), preview the invoice live, generate a professional PDF, and instantly deliver it via **email** and/or **WhatsApp/SMS** to the customer — all from a single page.
+A dedicated web dashboard for **Ravvarnix Renewable Energy Innovations Ltd.** to:
+1. **Estimate project cost** (instant calculator)
+2. **Generate a professional PDF quotation** that replicates and improves on the existing format, pre-filled with the company's fixed details and the client's entered data
+
+The dashboard follows the Ravvarnix brand identity derived from the letterhead and logo.
 
 ---
 
-## 2. Core Features
+## 2. Brand Identity (from Letterhead & Logo)
 
-| Feature | Description |
+| Token | Value |
 |---|---|
-| **Invoice Form** | Business info, client info, line items, taxes, discounts, notes |
-| **Live Preview** | Real-time PDF-style preview as the user types |
-| **Template Selection** | 3-5 built-in invoice templates (minimal, professional, branded) |
-| **Logo Upload** | Business logo embedded in the generated PDF |
-| **PDF Generation** | Server-side, pixel-perfect PDF with all invoice data |
-| **Email Delivery** | Send PDF as attachment to customer email |
-| **WhatsApp/SMS Delivery** | Send PDF link or message to customer phone number |
-| **Invoice History** | List of all generated invoices with status tracking |
-| **Download** | Always downloadable directly from the browser |
+| **Primary Green** | `#1B5E20` (dark forest green — logo text "Ravvarnix") |
+| **Accent Green** | `#2E7D32` (medium green — body elements) |
+| **Accent Orange** | `#F57C00` (sun/rays in logo) |
+| **Light Background** | `#F9FBF9` (off-white with green tint) |
+| **Table Header BG** | `#E8F5E9` (light green) |
+| **Border** | `#C8E6C9` |
+| **Text Primary** | `#1A1A1A` |
+| **Text Muted** | `#555555` |
+
+**Typography:** Inter (clean, modern) — replaces the PDF's mixed typefaces  
+**Logo:** Ravvarnix Solar sun + wordmark (top-left of every page)
 
 ---
 
-## 3. Tech Stack
+## 3. Fixed Company Details (Hard-coded — Never changes)
 
-| Layer | Technology | Reason |
+```
+Company Name:   Ravvarnix Renewable Energy Innovations Ltd.
+Address:        Old SBI Road, Near Post Office, Ram Nagar,
+                Supela, Bhilai - 490023
+GST No.:        22AAPCR5712G1ZF
+E-mail:         ravvarnixsolar@gmail.com
+Contact:        9691977558
+```
+
+These values are baked into the PDF template and NOT exposed on the dashboard.
+
+---
+
+## 4. Dashboard Layout
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  🌿 Ravvarnix Solar         [Cost Calculator]  [New Quotation]  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────────────────┐  ┌─────────────────────────────┐  │
+│  │   COST CALCULATOR       │  │   RECENT QUOTATIONS         │  │
+│  │   (always visible)      │  │   (table of past invoices)  │  │
+│  └─────────────────────────┘  └─────────────────────────────┘  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Two main features on the sidebar / tabs:**
+- **Cost Calculator** — quick estimate (no client info needed)
+- **Generate Quotation** — full form → PDF → email/SMS delivery
+
+---
+
+## 5. Feature 1: Cost Calculator
+
+A lightweight panel on the dashboard homepage. No client details needed.
+
+### Input Fields:
+| Field | Type | Notes |
 |---|---|---|
-| **Framework** | Next.js 14 (App Router) | SSR + API routes in one project |
-| **UI** | Tailwind CSS + shadcn/ui | Fast, clean dashboard components |
-| **PDF Generation** | Puppeteer (server-side) | Pixel-perfect HTML→PDF conversion |
-| **PDF Preview** | React component mirrors PDF template | Live preview without generating PDF |
-| **Email** | Nodemailer + Gmail SMTP (or Resend API) | Simple, reliable, free tier |
-| **WhatsApp** | Twilio WhatsApp API | Send PDF link to customer phone |
-| **SMS Fallback** | Twilio SMS | If WhatsApp not available |
-| **Database** | SQLite via Prisma (dev) / PostgreSQL (prod) | Store invoice records + history |
-| **File Storage** | Local filesystem (dev) / Cloudflare R2 (prod) | Store generated PDFs |
-| **Auth** | NextAuth.js (email magic link or Google OAuth) | Simple single-user or team auth |
-| **Hosting** | Vercel (frontend + API) + R2 for storage | Free tier sufficient for MVP |
+| Project Capacity (kW) | Number input | e.g. 4.9 |
+| Rate per kW (₹) | Number input | e.g. 33,000 |
+| GST % | Number input | default 8.9 |
+| Residential under Subsidy | Checkbox | shows subsidy row |
+| Subsidy Amount (₹) | Number input | visible only if checkbox checked |
+
+### Live Output (updates on every keystroke):
+```
+┌──────────────────────────────────────────┐
+│  ESTIMATED COST BREAKDOWN                │
+├──────────────────────────────────────────┤
+│  Capacity          :   4.9 kW            │
+│  Base Amount       :   ₹ 1,61,700        │
+│  GST (8.9%)        :   ₹  14,391         │
+│  Net Payable       :   ₹ 1,76,091        │
+│  Subsidy (MNRE)    : - ₹ 1,08,000        │
+│  ─────────────────────────────────────── │
+│  Effective Cost    :   ₹    68,091  ✦    │
+├──────────────────────────────────────────┤
+│  [Generate Quotation with these values]  │
+└──────────────────────────────────────────┘
+```
+
+Clicking **"Generate Quotation with these values"** pre-fills the quotation form below with the calculator values and scrolls to the form.
 
 ---
 
-## 4. Repository Structure
+## 6. Feature 2: Generate Quotation (Full Form)
+
+A multi-section form. "Generate PDF" button is disabled until required fields are filled.
+
+---
+
+### Section A — Quotation Meta
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| Quotation Number | Text input | Auto: `2026-27/RRE/001` (serialized) | User can override |
+| Date | Date picker | Today's date | User can change |
+
+**Auto-serialization logic:**  
+Format: `{FY}/{prefix}/{sequence}`  
+e.g. FY 2026-27 → `2026-27/RRE/001`, `002`, `003`...  
+Stored in DB, increments on each generated quotation.
+
+---
+
+### Section B — Client / Customer Details
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| Client Name | Text | Yes | |
+| Client Address | Textarea | No | Multi-line |
+| Client Email | Email input | **Yes** (for delivery) | Validated format |
+| Client Phone | Phone input | **Yes** (for SMS/WhatsApp) | With country code |
+
+Required fields show inline error if empty on submit attempt.  
+"Generate PDF" button stays **disabled** until email + phone are filled.
+
+---
+
+### Section C — Project Details
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| Project Capacity (kW) | Number input | — | e.g. 4.9 |
+| Residential under Subsidy | Checkbox | unchecked | Controls Row 3 in Estimate + project label |
+| Rate per kW (₹) | Number input | — | e.g. 33,000 |
+| GST % | Number input | 8.9 | Pre-filled, editable |
+| Subsidy Amount (₹) | Number input | — | **Visible only if checkbox checked** |
+
+---
+
+### Section D — Live Estimate Preview (read-only, auto-computed)
+
+Mirrors the Estimate table that will appear in the PDF. Updates in real-time.
+
+| Sr. No. | Particulars | Capacity (kW) | Rate per kW | Amount (₹) |
+|---|---|---|---|---|
+| 1 | Design, Engineering, Supply and Installation of grid connected rooftop solar project | `← project capacity` | `← rate per kW` | `capacity × rate` |
+| 2 | Add: GST @ `{gst}%` (subject to change as per government norms) | — | — | `amount × gst/100` |
+| — | **Net amount payable by customer** | | | **subtotal + GST** |
+| 3 | Subsidy amount to be claimed directly from MNRE by the consumer (Refer Note 7) | — | — | `← subsidy amount` |
+| — | ***Effective cost of the system*** | | | ***net − subsidy*** |
+
+**Row 3 and "Effective cost" row are hidden if "Residential under Subsidy" is unchecked.**
+
+---
+
+### Section E — Action Buttons
 
 ```
-Invoice_generator/
-├── app/                          # Next.js App Router
-│   ├── layout.tsx                # Root layout (nav, auth wrapper)
-│   ├── page.tsx                  # Redirect to /dashboard
-│   ├── dashboard/
-│   │   └── page.tsx              # Invoice history list
-│   ├── invoice/
-│   │   ├── new/
-│   │   │   └── page.tsx          # New invoice form + live preview
-│   │   └── [id]/
-│   │       └── page.tsx          # View / resend existing invoice
-│   ├── api/
-│   │   ├── invoice/
-│   │   │   ├── route.ts          # POST: create invoice + generate PDF
-│   │   │   └── [id]/
-│   │   │       └── route.ts      # GET: fetch invoice details
-│   │   ├── pdf/
-│   │   │   └── generate/
-│   │   │       └── route.ts      # POST: generate PDF from invoice data
-│   │   ├── send/
-│   │   │   ├── email/
-│   │   │   │   └── route.ts      # POST: send PDF via email
-│   │   │   └── whatsapp/
-│   │   │       └── route.ts      # POST: send PDF via WhatsApp/SMS
-│   │   └── upload/
-│   │       └── route.ts          # POST: upload business logo
-│
-├── components/
-│   ├── invoice/
-│   │   ├── InvoiceForm.tsx       # Main multi-section form
-│   │   ├── LineItemsTable.tsx    # Add/remove/edit line items
-│   │   ├── TaxDiscountPanel.tsx  # Tax % + discount controls
-│   │   └── LivePreview.tsx       # Right-side live preview pane
-│   ├── templates/
-│   │   ├── TemplateMinimal.tsx   # Clean minimal template
-│   │   ├── TemplateProfessional.tsx
-│   │   └── TemplateBranded.tsx   # Full color with logo
-│   ├── dashboard/
-│   │   ├── InvoiceTable.tsx      # History table with status badges
-│   │   └── StatsCards.tsx        # Total invoiced, paid, pending
-│   └── ui/                       # shadcn/ui components (auto-generated)
-│
-├── lib/
-│   ├── pdf.ts                    # Puppeteer PDF generation logic
-│   ├── email.ts                  # Nodemailer / Resend client
-│   ├── twilio.ts                 # Twilio WhatsApp + SMS client
-│   ├── storage.ts                # File save/read (local or R2)
-│   ├── calculations.ts           # Subtotal, tax, discount, total math
-│   └── prisma.ts                 # Prisma client singleton
-│
-├── prisma/
-│   ├── schema.prisma             # DB schema
-│   └── migrations/               # Auto-generated migrations
-│
-├── templates/                    # HTML templates for Puppeteer rendering
-│   ├── minimal.html
-│   ├── professional.html
-│   └── branded.html
-│
-├── public/
-│   └── uploads/                  # Business logos (dev only)
-│
-├── types/
-│   └── invoice.ts                # Shared TypeScript types
-│
-├── .env.local                    # Environment variables
-├── next.config.ts
-├── tailwind.config.ts
-├── tsconfig.json
-└── package.json
+[  Save Draft  ]   [  Preview PDF  ]   [  Generate & Send  ▶  ]
+```
+
+- **Save Draft** — saves to DB without sending, no required-field enforcement
+- **Preview PDF** — opens a modal with rendered PDF preview
+- **Generate & Send** — triggers the confirmation alert (see below)
+
+---
+
+## 7. Confirmation Alert (Before Final PDF Generation)
+
+Before generating the PDF and sending, show a modal:
+
+```
+┌─────────────────────────────────────────────────────┐
+│  ⚠️  Confirm & Send Quotation                       │
+├─────────────────────────────────────────────────────┤
+│                                                     │
+│  Quotation: 2026-27/RRE/001                         │
+│  Client:    Ajay Verma                              │
+│  Amount:    ₹ 2,61,360                              │
+│                                                     │
+│  This will be sent to:                              │
+│  📧 Email:    ajay@example.com                      │
+│  📱 WhatsApp: +91 94079 80242                       │
+│                                                     │
+│  [ ✉️  Send via Email     ]  ☑ (default on)         │
+│  [ 💬  Send via WhatsApp  ]  ☑ (default on)         │
+│                                                     │
+│  [  Cancel  ]          [  Confirm & Generate  ]     │
+└─────────────────────────────────────────────────────┘
+```
+
+User can toggle email/WhatsApp independently. At least one must be selected to proceed.
+
+---
+
+## 8. PDF Template Structure
+
+The generated PDF exactly replicates the Ravvarnix quotation format but with a cleaner visual design. Pages:
+
+---
+
+### Page 1 — Letterhead Header + Client + Estimate + Specs
+
+**Header Block (fixed — letterhead)**
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  [LOGO]   Ravvarnix Renewable Energy Innovations Ltd.            │
+│           Old SBI Road, Near Post Office, Ram Nagar,             │
+│           Supela, Bhilai - 490023                                │
+│           GST: 22AAPCR5712G1ZF  |  ravvarnixsolar@gmail.com     │
+│           Contact: 9691977558                                    │
+└──────────────────────────────────────────────────────────────────┘
+```
+Clean two-column layout: Logo left | Company details right with a green accent divider line.
+
+**Quotation Info + Client Block (flexible)**
+```
+┌───────────────────────────┬──────────────────────────────────────┐
+│ Quotation No: 2026-27/... │ Client Name: Ajay Verma              │
+│ Date: 15.05.2026          │ Address: Ramdev Medical Store...     │
+│                           │ Project Capacity: 4.9kW              │
+│                           │ (Residential under Subsidy)          │
+│                           │ Contact: 9407980242                  │
+└───────────────────────────┴──────────────────────────────────────┘
+```
+
+**ESTIMATE Table (semi-flexible — rows fixed, values flexible)**
+Green header band. Bold total rows. Subsidy row conditional.
+
+**PRICE INCLUSIONS AND TECHNICAL SPECIFICATIONS Table (fully fixed)**
+All spec rows as in original PDF, slightly wider column spacing, consistent font.
+
+---
+
+### Page 2 — Terms (fully fixed)
+
+Exact content from the PDF:
+- Documents Required
+- Commercial Terms (points 1–9)
+- Bank Account Details (HDFC Bank, IFSC: HDFC0000734, Acc: 50200120103614, Current Account)
+
+---
+
+### Page 3 — Signature (fully fixed)
+
+- Right-aligned: "Authorized Signatory"
+- "Ravvarnix, Renewable Energy Innovations (OPC) Pvt. Ltd."
+- Space for physical stamp/signature
+
+---
+
+## 9. Calculation Logic
+
+```ts
+const baseAmount     = projectCapacityKW * ratePerKW
+const gstAmount      = baseAmount * (gstPercent / 100)
+const netPayable     = baseAmount + gstAmount
+const subsidyAmount  = isSubsidy ? subsidyInput : 0
+const effectiveCost  = netPayable - subsidyAmount
+```
+
+All values formatted in Indian number system: `₹2,61,360`
+
+---
+
+## 10. Email Delivery
+
+**Subject:** `Quotation #{quotationNo} from Ravvarnix Renewable Energy Innovations Ltd.`
+
+**Body:**
+```
+Dear {clientName},
+
+Please find attached the quotation for your {capacityKW}kW rooftop
+solar installation.
+
+Quotation No: {quotationNo}
+Date: {date}
+Net Amount Payable: ₹{netPayable}
+{if subsidy: Effective Cost after Subsidy: ₹{effectiveCost}}
+
+For any questions, please contact us at ravvarnixsolar@gmail.com
+or call 9691977558.
+
+Warm regards,
+Ravvarnix Renewable Energy Innovations Ltd.
+```
+**Attachment:** `Quotation_{quotationNo}_{clientName}.pdf`
+
+---
+
+## 11. WhatsApp / SMS Delivery
+
+```
+Hi {clientName}! 🌞
+
+Your solar project quotation from *Ravvarnix Renewable Energy* is ready.
+
+📋 Quotation No: {quotationNo}
+⚡ Capacity: {capacityKW}kW
+💰 Net Payable: ₹{netPayable}
+{if subsidy: 🏛️ Post-Subsidy Cost: ₹{effectiveCost}}
+
+Download your quotation here:
+{pdfLink}
+
+For queries: ravvarnixsolar@gmail.com | 9691977558
 ```
 
 ---
 
-## 5. Database Schema (Prisma)
+## 12. Tech Stack
+
+| Layer | Technology |
+|---|---|
+| **Framework** | Next.js 14 (App Router, TypeScript) |
+| **UI Components** | shadcn/ui + Tailwind CSS |
+| **Color Theme** | Custom Ravvarnix green/orange tokens in Tailwind config |
+| **PDF Generation** | `@react-pdf/renderer` — React components → PDF (no headless browser needed) |
+| **PDF Preview** | Same React-PDF component rendered in modal |
+| **Email** | Resend API (or Nodemailer + Gmail) |
+| **WhatsApp/SMS** | Twilio API |
+| **Database** | SQLite + Prisma (dev) → PostgreSQL/Neon (prod) |
+| **PDF Storage** | Local `/public/generated/` (dev) → Cloudflare R2 (prod) |
+| **Hosting** | Vercel |
+
+---
+
+## 13. Database Schema
 
 ```prisma
-model Invoice {
+model Quotation {
   id              String   @id @default(cuid())
-  invoiceNumber   String   @unique  // e.g. INV-2024-0001
-  
-  // Business (sender) info
-  businessName    String
-  businessEmail   String
-  businessPhone   String?
-  businessAddress String?
-  businessLogo    String?  // URL/path to logo file
+  quotationNumber String   @unique   // e.g. "2026-27/RRE/001"
+  sequence        Int      @default(autoincrement())
 
-  // Customer (recipient) info
-  customerName    String
-  customerEmail   String
-  customerPhone   String   // for WhatsApp/SMS delivery
-  customerAddress String?
+  // Client (flexible)
+  clientName      String
+  clientEmail     String
+  clientPhone     String
+  clientAddress   String?
 
-  // Invoice metadata
-  issueDate       DateTime @default(now())
-  dueDate         DateTime
-  currency        String   @default("INR")
-  template        String   @default("professional")
-  notes           String?
-  terms           String?
+  // Project (flexible)
+  date            DateTime @default(now())
+  capacityKW      Float
+  ratePerKW       Float
+  gstPercent      Float    @default(8.9)
+  isSubsidy       Boolean  @default(false)
+  subsidyAmount   Float    @default(0)
 
-  // Financials (stored for history — computed from line items)
-  subtotal        Float
-  taxAmount       Float    @default(0)
-  discountAmount  Float    @default(0)
-  total           Float
+  // Computed (stored for history)
+  baseAmount      Float
+  gstAmount       Float
+  netPayable      Float
+  effectiveCost   Float
 
-  // Status
-  status          String   @default("draft")  // draft | sent | paid | overdue
-
-  // Delivery tracking
+  // Delivery
+  pdfUrl          String?
   emailSentAt     DateTime?
   whatsappSentAt  DateTime?
-  pdfUrl          String?   // stored PDF path/URL
-
-  lineItems       LineItem[]
-  taxes           Tax[]
+  status          String   @default("draft")  // draft | sent | viewed
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
 
-model LineItem {
-  id          String   @id @default(cuid())
-  invoiceId   String
-  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-
-  description String
-  quantity    Float
-  unitPrice   Float
-  amount      Float    // quantity * unitPrice
-
-  createdAt   DateTime @default(now())
-}
-
-model Tax {
-  id        String  @id @default(cuid())
-  invoiceId String
-  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-
-  name      String   // e.g. "GST", "CGST", "SGST"
-  rate      Float    // percentage, e.g. 18.0
-  amount    Float    // computed tax amount
+model QuotationSequence {
+  id              Int    @id @default(1)
+  currentFY       String   // "2026-27"
+  lastSequence    Int      @default(0)
 }
 ```
 
 ---
 
-## 6. Invoice Form — Field Reference
-
-### Section 1: Your Business Info
-- Business Name *
-- Business Email *
-- Business Phone
-- Business Address (multi-line)
-- Business Logo (file upload, PNG/JPG, max 2MB)
-
-### Section 2: Bill To (Customer)
-- Customer Name *
-- Customer Email * (for PDF delivery)
-- Customer Phone * (for WhatsApp/SMS delivery, with country code)
-- Customer Address
-
-### Section 3: Invoice Details
-- Invoice Number * (auto-generated: `INV-YYYY-NNNN`, user can override)
-- Issue Date * (default: today)
-- Due Date * (default: today + 30 days)
-- Currency (INR default, dropdown: INR / USD / EUR / GBP)
-- Template (dropdown: Minimal / Professional / Branded)
-
-### Section 4: Line Items (dynamic rows)
-| # | Description | Qty | Unit Price | Amount |
-Each row: add / remove button. "Add Item" button below.
-
-### Section 5: Taxes & Discounts
-- Discount: flat (₹) or percentage (%)
-- Taxes: add multiple (name + rate %) — e.g. CGST 9%, SGST 9%
-- Totals auto-compute: Subtotal → Discount → Tax → **Total**
-
-### Section 6: Notes & Terms
-- Notes (e.g. "Thank you for your business")
-- Payment Terms (e.g. "Payment due within 30 days")
-
----
-
-## 7. PDF Generation Flow
+## 14. Repository Structure
 
 ```
-User clicks "Generate & Send"
-        │
-        ▼
-POST /api/invoice  (save to DB, get invoice ID)
-        │
-        ▼
-POST /api/pdf/generate
-  → Load HTML template (professional.html)
-  → Inject invoice data (Handlebars or string interpolation)
-  → Launch Puppeteer (headless Chromium)
-  → page.goto(rendered HTML URL or data URI)
-  → page.pdf({ format: 'A4', printBackground: true })
-  → Save PDF to /public/uploads/{invoiceId}.pdf (dev)
-           or upload to Cloudflare R2 (prod)
-  → Return PDF URL
-        │
-        ▼
-[parallel]
-POST /api/send/email       POST /api/send/whatsapp
-  → Nodemailer                → Twilio API
-  → Attach PDF file           → Send PDF URL as message
-  → Send to customerEmail     → Send to customerPhone
-  → Update emailSentAt        → Update whatsappSentAt
-        │                            │
-        └──────────┬─────────────────┘
-                   ▼
-         Update invoice status → "sent"
-         Show success toast + invoice ID
+Invoice_generator/
+├── app/
+│   ├── layout.tsx                    # Root layout with Ravvarnix branding
+│   ├── page.tsx                      # Dashboard homepage (calculator + recent)
+│   ├── quotation/
+│   │   ├── new/page.tsx              # New quotation form
+│   │   └── [id]/page.tsx            # View / resend existing quotation
+│   └── api/
+│       ├── quotation/route.ts        # POST: save quotation to DB
+│       ├── pdf/generate/route.ts     # POST: generate PDF
+│       ├── send/email/route.ts       # POST: send via email
+│       └── send/whatsapp/route.ts    # POST: send via WhatsApp
+│
+├── components/
+│   ├── dashboard/
+│   │   ├── CostCalculator.tsx        # Feature 1: live calculator panel
+│   │   └── RecentQuotations.tsx      # Table of past quotations
+│   ├── quotation/
+│   │   ├── QuotationForm.tsx         # Main form (Sections A–E)
+│   │   ├── EstimatePreview.tsx       # Live estimate table in form
+│   │   └── ConfirmSendModal.tsx      # Alert modal before PDF generation
+│   └── pdf/
+│       ├── QuotationPDF.tsx          # @react-pdf/renderer document
+│       ├── PDFHeader.tsx             # Fixed letterhead component
+│       ├── PDFEstimate.tsx           # Estimate table (dynamic rows)
+│       ├── PDFSpecs.tsx              # Fixed specs table
+│       ├── PDFTerms.tsx              # Fixed commercial terms
+│       └── PDFSignature.tsx          # Fixed signature page
+│
+├── lib/
+│   ├── calculations.ts               # Cost computation functions
+│   ├── quotation-number.ts           # Auto-serialization logic
+│   ├── email.ts                      # Resend/Nodemailer client
+│   ├── twilio.ts                     # Twilio WhatsApp + SMS
+│   ├── storage.ts                    # PDF file save/read
+│   └── prisma.ts                     # Prisma singleton
+│
+├── constants/
+│   └── company.ts                    # Fixed company details (name, address, GST, etc.)
+│
+├── prisma/schema.prisma
+├── .env.local
+└── package.json
 ```
 
 ---
 
-## 8. Email Delivery
+## 15. Build Order
 
-### Provider: Resend API (recommended) or Nodemailer + Gmail
+### Phase 1 — Setup + Brand (Day 1)
+- [ ] Initialize Next.js 14 + TypeScript + Tailwind + shadcn/ui
+- [ ] Configure Ravvarnix color tokens in `tailwind.config.ts`
+- [ ] Set up Prisma + SQLite, run first migration
+- [ ] Create root layout with Ravvarnix header (logo + nav)
+- [ ] Add company constants file
 
-**Email content:**
-- Subject: `Invoice #{invoiceNumber} from {businessName}`
-- Body: Clean HTML email with invoice summary table + total
-- Attachment: `Invoice_{invoiceNumber}.pdf`
+### Phase 2 — Cost Calculator (Day 2)
+- [ ] Build `CostCalculator.tsx` with all inputs + live output
+- [ ] Wire up calculation logic from `lib/calculations.ts`
+- [ ] Dashboard homepage with calculator + placeholder recent table
 
-**Resend setup:**
-```ts
-import { Resend } from 'resend';
-const resend = new Resend(process.env.RESEND_API_KEY);
+### Phase 3 — Quotation Form (Day 3–4)
+- [ ] Build `QuotationForm.tsx` with Sections A–D
+- [ ] Build `EstimatePreview.tsx` (live table in the form)
+- [ ] Subsidy checkbox toggling Row 3 logic
+- [ ] Auto-quotation number generation
+- [ ] Required field validation + disabled button state
 
-await resend.emails.send({
-  from: 'invoices@yourdomain.com',
-  to: customerEmail,
-  subject: `Invoice #${invoiceNumber} from ${businessName}`,
-  html: emailTemplate,
-  attachments: [{ filename: `Invoice_${invoiceNumber}.pdf`, content: pdfBuffer }]
-});
-```
+### Phase 4 — PDF Template (Day 5–6)
+- [ ] Build all PDF components using `@react-pdf/renderer`
+- [ ] Match layout to original PDF with cleaner styling
+- [ ] Conditional subsidy rows in `PDFEstimate.tsx`
+- [ ] Fixed pages: specs, terms, signature
+- [ ] Build `/api/pdf/generate` route
+- [ ] Preview PDF in modal on dashboard
 
----
+### Phase 5 — Email + WhatsApp (Day 7)
+- [ ] Set up Resend API → `/api/send/email`
+- [ ] Set up Twilio → `/api/send/whatsapp`
+- [ ] Build `ConfirmSendModal.tsx` with toggles
+- [ ] Wire up "Generate & Send" button end-to-end
 
-## 9. WhatsApp / SMS Delivery
+### Phase 6 — History + Polish (Day 8–9)
+- [ ] Build `RecentQuotations.tsx` table (quotation no, client, amount, status, actions)
+- [ ] Resend from history
+- [ ] Quotation sequence persistence across FY
+- [ ] Toast notifications (success / error per channel)
+- [ ] Form state warnings on unsaved changes
 
-### Provider: Twilio
-
-**WhatsApp message format:**
-```
-Hi {customerName}! 👋
-
-You have a new invoice from *{businessName}*.
-
-🧾 Invoice #{invoiceNumber}
-📅 Due: {dueDate}
-💰 Total: ₹{total}
-
-Download your invoice here:
-{pdfUrl}
-
-For queries, contact: {businessEmail}
-```
-
-**Twilio setup:**
-```ts
-import twilio from 'twilio';
-const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-
-await client.messages.create({
-  from: 'whatsapp:+14155238886',  // Twilio sandbox number
-  to: `whatsapp:${customerPhone}`,
-  body: messageText,
-  mediaUrl: [pdfUrl]  // optional: attach PDF directly
-});
-```
-
-**SMS fallback:** Same `client.messages.create` without `whatsapp:` prefix.
+### Phase 7 — Deploy (Day 10)
+- [ ] Deploy to Vercel
+- [ ] Switch SQLite → Neon PostgreSQL
+- [ ] Switch local PDF storage → Cloudflare R2
+- [ ] End-to-end test with real email + WhatsApp
 
 ---
 
-## 10. Live Preview Architecture
-
-The right panel mirrors the selected template in React.
-- No PDF is generated during preview — it's pure CSS/React rendering.
-- The same data shape that feeds the preview also feeds Puppeteer.
-- Template switching instantly re-renders the preview.
-
-```tsx
-// InvoiceForm.tsx  (split-screen layout)
-<div className="grid grid-cols-2 gap-6">
-  <InvoiceForm data={invoiceData} onChange={setInvoiceData} />
-  <LivePreview data={invoiceData} template={selectedTemplate} />
-</div>
-```
-
----
-
-## 11. Invoice Templates
-
-### Template 1: Minimal
-- White background, black text, thin borders
-- Logo top-left, invoice number top-right
-- Clean line items table, totals right-aligned
-
-### Template 2: Professional
-- Light gray header band with business name
-- Color accent (blue) for table headers and totals
-- Two-column layout: business info left, customer info right
-
-### Template 3: Branded
-- Full-color header (customizable primary color)
-- Large logo placement
-- Bold total section with colored background
-
----
-
-## 12. Dashboard (Invoice History)
-
-**Stats Row:**
-- Total Invoiced (sum of all invoice totals)
-- Paid Invoices (count + amount)
-- Pending Invoices (count + amount)
-- Overdue Invoices (count + amount, highlighted red)
-
-**Invoice Table columns:**
-| Invoice # | Customer | Date | Due Date | Amount | Status | Actions |
-Actions: View · Resend Email · Resend WhatsApp · Download PDF
-
-**Status badges:**
-- `draft` → gray
-- `sent` → blue
-- `paid` → green
-- `overdue` → red
-
----
-
-## 13. Environment Variables
+## 16. Environment Variables
 
 ```env
 # Database
-DATABASE_URL="file:./dev.db"                   # SQLite for dev
-# DATABASE_URL="postgresql://..."              # PostgreSQL for prod
+DATABASE_URL="file:./dev.db"
 
-# Email (choose one)
-RESEND_API_KEY=re_...                          # Resend (recommended)
-# SMTP_HOST=smtp.gmail.com                    # or Nodemailer + Gmail
-# SMTP_PORT=587
-# SMTP_USER=you@gmail.com
-# SMTP_PASS=your_app_password
+# Email
+RESEND_API_KEY=re_...
+FROM_EMAIL=invoices@ravvarnix.com
 
 # Twilio (WhatsApp + SMS)
 TWILIO_ACCOUNT_SID=AC...
 TWILIO_AUTH_TOKEN=...
-TWILIO_WHATSAPP_NUMBER=whatsapp:+14155238886  # Sandbox
-TWILIO_SMS_NUMBER=+1...
+TWILIO_WHATSAPP_FROM=whatsapp:+14155238886
 
 # Storage
-PDF_STORAGE_PATH=./public/uploads             # Dev: local filesystem
-# R2_ACCOUNT_ID=...                           # Prod: Cloudflare R2
-# R2_ACCESS_KEY_ID=...
-# R2_SECRET_ACCESS_KEY=...
-# R2_BUCKET_NAME=invoices
+PDF_STORAGE_PATH=./public/generated
 
 # App
 NEXT_PUBLIC_APP_URL=http://localhost:3000
-INVOICE_NUMBER_PREFIX=INV
+QUOTATION_PREFIX=RRE
 ```
 
 ---
 
-## 14. Build Order (Phased)
+## 17. Key UX Rules
 
-### Phase 1 — Project Setup (Day 1)
-- [ ] Initialize Next.js 14 project with TypeScript + Tailwind + shadcn/ui
-- [ ] Set up Prisma with SQLite, run first migration
-- [ ] Create root layout with sidebar nav (Dashboard / New Invoice)
-- [ ] Push to GitHub
-
-### Phase 2 — Invoice Form (Day 2-3)
-- [ ] Build `InvoiceForm.tsx` with all 6 sections
-- [ ] Build `LineItemsTable.tsx` with dynamic add/remove rows
-- [ ] Build `TaxDiscountPanel.tsx` with auto-computed totals
-- [ ] Form state management (React state / React Hook Form + Zod)
-- [ ] Logo upload component (client-side preview)
-
-### Phase 3 — Live Preview + Templates (Day 4-5)
-- [ ] Build `TemplateMinimal.tsx` component
-- [ ] Build `TemplateProfessional.tsx` component
-- [ ] Build `TemplateBranded.tsx` component
-- [ ] Build `LivePreview.tsx` (renders selected template with form data)
-- [ ] Split-screen layout: form left, preview right
-
-### Phase 4 — PDF Generation (Day 6)
-- [ ] Install Puppeteer, configure for Next.js API route
-- [ ] Create HTML template files for each invoice style
-- [ ] Build `/api/pdf/generate` route
-- [ ] Test end-to-end: form data → PDF file → download link
-
-### Phase 5 — Email & WhatsApp Delivery (Day 7-8)
-- [ ] Set up Resend API, build `/api/send/email` route
-- [ ] Set up Twilio sandbox, build `/api/send/whatsapp` route
-- [ ] Build SMS fallback in same route
-- [ ] Wire up "Generate & Send" button to full flow
-- [ ] Show delivery status (sent / failed) per channel
-
-### Phase 6 — Invoice Persistence & Dashboard (Day 9-10)
-- [ ] Build `/api/invoice` POST route (save to DB)
-- [ ] Build `/api/invoice/[id]` GET route
-- [ ] Build Dashboard page with `InvoiceTable.tsx` + `StatsCards.tsx`
-- [ ] Status management (draft → sent → paid → overdue)
-- [ ] Resend actions from dashboard
-
-### Phase 7 — Polish & Deploy (Day 11-12)
-- [ ] Form validation (Zod schema, inline errors)
-- [ ] Error handling (email fail, WhatsApp fail, PDF fail — graceful toasts)
-- [ ] Responsive layout (works on tablet/mobile for viewing)
-- [ ] Deploy to Vercel
-- [ ] Switch SQLite → PostgreSQL (Neon free tier)
-- [ ] Switch local storage → Cloudflare R2 for PDFs
-
----
-
-## 15. Calculations Logic
-
-```ts
-// lib/calculations.ts
-
-export function computeInvoiceTotals(lineItems, taxes, discount) {
-  const subtotal = lineItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
-  
-  const discountAmount = discount.type === 'percentage'
-    ? subtotal * (discount.value / 100)
-    : discount.value;
-
-  const afterDiscount = subtotal - discountAmount;
-
-  const taxAmount = taxes.reduce((sum, tax) => sum + afterDiscount * (tax.rate / 100), 0);
-
-  const total = afterDiscount + taxAmount;
-
-  return { subtotal, discountAmount, taxAmount, total };
-}
-```
-
----
-
-## 16. Key UX Details
-
-- **Auto invoice number**: system generates `INV-2024-0001`, increments automatically, user can override
-- **Currency formatting**: all amounts formatted with correct symbol and 2 decimal places
-- **Date pickers**: native `<input type="date">` or shadcn Calendar component
-- **Unsaved state**: warn user if they navigate away with unsaved changes
-- **Send confirmation modal**: shows summary (customer name, email, phone, total) before sending
-- **Loading states**: spinner on "Generate & Send" button, disabled during processing
-- **Success state**: show invoice number, green checkmarks for email ✅ and WhatsApp ✅
-- **Download always available**: PDF URL stored in DB, re-downloadable from history
-
----
-
-## 17. Estimated Costs (Production)
-
-| Service | Free Tier | Cost Beyond |
-|---|---|---|
-| Vercel Hosting | 100GB bandwidth/month | $20/month pro |
-| Neon PostgreSQL | 0.5 GB storage | $19/month |
-| Resend Email | 3,000 emails/month | $20/month for 50k |
-| Twilio WhatsApp | $0 sandbox (testing only) | ~$0.005/message |
-| Cloudflare R2 | 10 GB storage, 1M requests | $0.015/GB after |
-
-**MVP running cost at low volume: ~$0/month** (all free tiers sufficient for early usage)
+- Quotation number auto-increments but is **always editable** before generating
+- Date defaults to today but has a **date picker** for manual override
+- Rate per kW and GST% are **sticky** — remembered from last session (localStorage)
+- Subsidy amount field **animates in/out** when checkbox is toggled
+- "Generate & Send" button shows a **spinner** and disables during processing
+- After send: show green checkmarks for Email ✅ and WhatsApp ✅ independently
+- All monetary values formatted as **Indian numbering** (₹2,61,360 not ₹261360)
+- PDF always downloadable from the history table even after sending
