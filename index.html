@@ -31,6 +31,11 @@
   --r-sm: 6px;  --r-md: 10px;  --r-lg: 14px;
   --sidebar: 220px;
   --top: 54px;
+
+  /* PDF accent — change these three to retheme the entire invoice */
+  --pa:    #1565C0;   /* dark: section header bands, divider */
+  --pa-lt: #EFF6FF;   /* light: table header rows, meta bg   */
+  --pa-bd: #BFDBFE;   /* border: table & section borders     */
 }
 
 /* ── Reset ────────────────────────────────────────────────────── */
@@ -351,62 +356,77 @@ input.err{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(220,38,38,
 }
 
 /* PDF header */
-.pdf-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #1A6B2C}
-.pdf-logo-img{height:72px;width:auto;object-fit:contain}
+.pdf-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid var(--pa)}
+.pdf-logo-img{height:92px;width:auto;object-fit:contain}
 .pdf-company-details{text-align:right;font-size:8.5pt;line-height:1.7;color:#444}
-.pdf-company-details strong{display:block;font-size:9pt;color:#111;margin-bottom:2px}
+.pdf-company-details strong{display:block;font-size:13pt;font-weight:800;color:#111;margin-bottom:4px;letter-spacing:-.01em}
 
 .pdf-meta{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:14px}
 .pdf-meta-left,.pdf-meta-right{padding:10px 12px;font-size:8.5pt;line-height:1.8}
-.pdf-meta-left{background:#F0F7F1;border:1px solid #C8E6C9}
+.pdf-meta-left{background:var(--pa-lt);border:1px solid var(--pa-bd)}
 .pdf-meta-right{background:#FFF;border:1px solid #E0E0E0;border-left:none}
 .pdf-meta-row{display:flex;gap:6px}
 .pdf-meta-row .lbl{color:#555;min-width:110px}
 .pdf-meta-row .val{font-weight:600;color:#111}
 
+/* "Quotation" document title */
+.pdf-doc-title{
+  font-size:15pt;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  text-align:center;color:var(--pa);
+  margin:10px 0 14px;padding-bottom:8px;
+  border-bottom:1.5px solid var(--pa-bd);
+}
+
 .pdf-section-title{
-  background:#1A6B2C;color:#fff;padding:5px 10px;
+  background:var(--pa);color:#fff;padding:5px 10px;
   font-size:9pt;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
   margin-bottom:0;text-align:center;
 }
 .pdf-estimate-table{width:100%;border-collapse:collapse;font-size:9pt;margin-bottom:14px}
 .pdf-estimate-table th{
-  background:#E8F5EA;border:1px solid #C8E6C9;
+  background:var(--pa-lt);border:1px solid var(--pa-bd);
   padding:5px 8px;text-align:center;font-weight:700;font-size:8.5pt;
 }
-.pdf-estimate-table td{border:1px solid #C8E6C9;padding:5px 8px;vertical-align:top}
+.pdf-estimate-table td{border:1px solid var(--pa-bd);padding:5px 8px;vertical-align:top}
 .pdf-estimate-table .right{text-align:right;font-variant-numeric:tabular-nums}
 .pdf-estimate-table .center{text-align:center}
 .pdf-estimate-table .bold{font-weight:700}
-.pdf-estimate-table .total-row td{background:#E8F5EA;font-weight:700}
-.pdf-estimate-table .eff-row td{background:#1A6B2C;color:#fff;font-weight:700}
+.pdf-estimate-table .total-row td{background:var(--pa-lt);font-weight:700}
+.pdf-estimate-table .eff-row td{background:var(--pa);color:#fff;font-weight:700}
 
-.pdf-specs-title{background:#1A6B2C;color:#fff;padding:5px 10px;font-size:9pt;font-weight:700;letter-spacing:.05em;text-transform:uppercase;text-align:center;margin-bottom:0}
+.pdf-specs-title{background:var(--pa);color:#fff;padding:5px 10px;font-size:9pt;font-weight:700;letter-spacing:.05em;text-transform:uppercase;text-align:center;margin-bottom:0}
 .pdf-specs-table{width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:14px}
-.pdf-specs-table th{background:#E8F5EA;border:1px solid #C8E6C9;padding:5px 8px;text-align:left;font-weight:700}
-.pdf-specs-table td{border:1px solid #C8E6C9;padding:4px 8px;vertical-align:top}
+.pdf-specs-table th{background:var(--pa-lt);border:1px solid var(--pa-bd);padding:5px 8px;text-align:left;font-weight:700}
+.pdf-specs-table td{border:1px solid var(--pa-bd);padding:4px 8px;vertical-align:top}
 .pdf-specs-table .cat-cell{font-weight:600}
 
-.pdf-docs-title{font-size:9pt;font-weight:700;text-align:center;background:#E8F5EA;border:1px solid #C8E6C9;padding:4px 8px;margin-bottom:0}
+.pdf-docs-title{font-size:9pt;font-weight:700;text-align:center;background:var(--pa-lt);border:1px solid var(--pa-bd);padding:4px 8px;margin-bottom:0}
 .pdf-docs-table{width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:14px}
-.pdf-docs-table td{border:1px solid #C8E6C9;padding:5px 8px}
+.pdf-docs-table td{border:1px solid var(--pa-bd);padding:5px 8px}
 
-.pdf-terms-title{font-size:9pt;font-weight:700;text-align:center;background:#E8F5EA;border:1px solid #C8E6C9;padding:4px 8px;margin-bottom:0}
+.pdf-terms-title{font-size:9pt;font-weight:700;text-align:center;background:var(--pa-lt);border:1px solid var(--pa-bd);padding:4px 8px;margin-bottom:0}
 .pdf-terms-table{width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:14px}
-.pdf-terms-table td{border:1px solid #C8E6C9;padding:4px 8px;vertical-align:top}
+.pdf-terms-table td{border:1px solid var(--pa-bd);padding:4px 8px;vertical-align:top}
 .pdf-terms-table .td-num{width:30px;font-weight:700;text-align:center}
 
-.pdf-bank-title{font-size:9pt;font-weight:700;text-align:center;background:#E8F5EA;border:1px solid #C8E6C9;padding:4px 8px;margin-bottom:0}
+.pdf-bank-title{font-size:9pt;font-weight:700;text-align:center;background:var(--pa-lt);border:1px solid var(--pa-bd);padding:4px 8px;margin-bottom:0}
 .pdf-bank-table{width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:24px}
-.pdf-bank-table td{border:1px solid #C8E6C9;padding:5px 8px}
+.pdf-bank-table td{border:1px solid var(--pa-bd);padding:5px 8px}
 
-.pdf-pay-title{font-size:9pt;font-weight:700;text-align:center;background:#E8F5EA;border:1px solid #C8E6C9;padding:4px 8px;margin-bottom:0;margin-top:18px}
+.pdf-pay-title{font-size:9pt;font-weight:700;text-align:center;background:var(--pa-lt);border:1px solid var(--pa-bd);padding:4px 8px;margin-bottom:0;margin-top:18px}
 .pdf-pay-table{width:100%;border-collapse:collapse;font-size:9pt;margin-bottom:24px}
-.pdf-pay-table td{border:1px solid #C8E6C9;padding:6px 10px}
-.pdf-pay-table tr:last-child{font-weight:700;background:#f9fde5}
+.pdf-pay-table td{border:1px solid var(--pa-bd);padding:6px 10px}
+.pdf-pay-table tr:last-child{font-weight:700;background:var(--pa-lt)}
 .pdf-pay-table .right{text-align:right;font-variant-numeric:tabular-nums}
 
-.pdf-sign{text-align:right;font-size:9pt;padding-top:10px;border-top:1px solid #ddd}
+/* Page 2 break wrapper */
+.pdf-page2{break-before:page;page-break-before:always;padding-top:6px}
+
+.pdf-sign{
+  text-align:right;font-size:9pt;
+  margin-top:24px;padding-top:90px;
+  border-top:1px solid #ccc;
+}
 .pdf-sign strong{font-size:9.5pt}
 
 .pdf-page-break{height:30px;background:#525659;width:794px;margin:0 -44px;display:flex;align-items:center;justify-content:center}
@@ -1204,6 +1224,9 @@ function openPreview(){
       </div>
     </div>
 
+    <!-- Document title -->
+    <div class="pdf-doc-title">Quotation</div>
+
     <!-- Estimate -->
     <div class="pdf-section-title">ESTIMATE</div>
     <table class="pdf-estimate-table">
@@ -1261,7 +1284,8 @@ function openPreview(){
       <tbody><tr><td style="width:50px;text-align:center">1</td><td>Copy of latest electricity bill &amp; property tax / Vera bill, Aadhaar card, 2 passport size photographs &amp; cancelled cheque</td></tr></tbody>
     </table>
 
-    <!-- Commercial Terms -->
+    <!-- Page 2: Commercial Terms onward -->
+    <div class="pdf-page2">
     <div class="pdf-terms-title">COMMERCIAL TERMS</div>
     <table class="pdf-terms-table">
       <thead><tr><th style="width:40px">Sr. No.</th><th>Particulars</th></tr></thead>
@@ -1300,6 +1324,7 @@ function openPreview(){
       <strong>Authorized Signatory</strong><br>
       Ravvarnix, Renewable Energy Innovations (OPC) Pvt. Ltd.
     </div>
+    </div><!-- /pdf-page2 -->
   `;
 
   document.getElementById('pdf-modal').classList.add('open');
