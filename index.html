@@ -33,9 +33,9 @@
   --top: 54px;
 
   /* PDF accent — change these three to retheme the entire invoice */
-  --pa:    #1565C0;   /* dark: section header bands, divider */
-  --pa-lt: #EFF6FF;   /* light: table header rows, meta bg   */
-  --pa-bd: #BFDBFE;   /* border: table & section borders     */
+  --pa:    #3A8C3F;   /* dark: section header bands           */
+  --pa-lt: #F2FAF2;   /* light: table header rows, meta bg   */
+  --pa-bd: #C8E6C9;   /* border: table & section borders     */
 }
 
 /* ── Reset ────────────────────────────────────────────────────── */
@@ -356,10 +356,10 @@ input.err{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(220,38,38,
 }
 
 /* PDF header */
-.pdf-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid var(--pa)}
-.pdf-logo-img{height:114px;width:auto;object-fit:contain}
-.pdf-company-details{text-align:right;font-size:8.5pt;line-height:1.7;color:#444}
-.pdf-company-details strong{display:block;font-size:16pt;font-weight:800;color:#111;margin-bottom:4px;letter-spacing:-.01em}
+.pdf-header{display:flex;align-items:center;gap:12px;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid var(--pa)}
+.pdf-logo-img{height:114px;width:auto;object-fit:contain;flex-shrink:0}
+.pdf-company-details{flex:1;text-align:center;font-size:8.5pt;line-height:1.8;color:#555}
+.pdf-company-details strong{display:block;font-size:17pt;font-weight:800;color:#6B21A8;margin-bottom:5px;letter-spacing:-.01em;line-height:1.2}
 
 .pdf-meta{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:14px}
 .pdf-meta-left,.pdf-meta-right{padding:10px 12px;font-size:8.5pt;line-height:1.8}
@@ -1149,7 +1149,7 @@ Your solar project quotation is ready:
 Please feel free to reach out with any questions.
 
 Warm regards,
-Ravvarnix Renewable Energy Innovations Ltd.
+Ravvarnix Renewable Energy Innovations OPC Pvt Ltd
 Phone: 9691977558 | ravvarnixsolar@gmail.com`);
 
   const waText=encodeURIComponent(
@@ -1165,7 +1165,7 @@ Your solar project quotation from *Ravvarnix Solar* is ready!
 For queries: 9691977558
 📧 ravvarnixsolar@gmail.com
 
-_Ravvarnix Renewable Energy Innovations Ltd._`);
+_Ravvarnix Renewable Energy Innovations OPC Pvt Ltd_`);
 
   const doEmail=document.getElementById('chk-email').checked;
   const doWa=document.getElementById('chk-wa').checked;
@@ -1221,7 +1221,7 @@ function openPreview(){
     <div class="pdf-header">
       <img class="pdf-logo-img" src="assets/logo.jpeg" alt="Ravvarnix Solar">
       <div class="pdf-company-details">
-        <strong>Ravvarnix Renewable Energy Innovations Ltd.</strong>
+        <strong>Ravvarnix Renewable Energy Innovations OPC Pvt Ltd</strong>
         Old SBI Road, Near Post Office, Ram Nagar,<br>
         Supela, Bhilai – 490023<br>
         GST No.: 22AAPCR5712G1ZF<br>
