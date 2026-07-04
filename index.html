@@ -1061,33 +1061,50 @@ function closeModal(id){document.getElementById(id).classList.remove('open')}
 
 // ── Download PDF ──────────────────────────────────────────────
 async function downloadPDF(){
-  // Render preview if modal isn't already open
   const modal=document.getElementById('pdf-modal');
   const wasOpen=modal.classList.contains('open');
   if(!wasOpen){openPreview();}
-  // Wait for images (logo) to load
   await new Promise(r=>setTimeout(r,600));
   const btn=document.getElementById('btn-dl');
   btn.disabled=true;btn.textContent='Generating…';
   try{
     const page=document.getElementById('pdf-content');
-    const canvas=await html2canvas(page,{scale:2,useCORS:true,allowTaint:true,backgroundColor:'#ffffff'});
-    const imgData=canvas.toDataURL('image/jpeg',0.97);
+    const page2El=page.querySelector('.pdf-page2');
+    const opts={scale:2,useCORS:true,allowTaint:true,backgroundColor:'#ffffff'};
+
+    // ── Page 1: hide the page-2 block, capture the rest ──────
+    page2El.style.display='none';
+    const c1=await html2canvas(page,opts);
+    page2El.style.display='';
+
+    // ── Page 2: render .pdf-page2 content in an off-screen
+    //    wrapper that inherits all .pdf-page styling ──────────
+    const ghost=document.createElement('div');
+    ghost.className='pdf-page';
+    ghost.style.cssText='position:fixed;top:-9999px;left:0;z-index:-1;';
+    ghost.innerHTML=page2El.innerHTML;
+    document.body.appendChild(ghost);
+    await new Promise(r=>setTimeout(r,200));
+    const c2=await html2canvas(ghost,opts);
+    document.body.removeChild(ghost);
+
+    // ── Assemble PDF ─────────────────────────────────────────
     const {jsPDF}=window.jspdf;
     const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-    const pdfW=pdf.internal.pageSize.getWidth();
-    const pdfH=pdf.internal.pageSize.getHeight();
-    const imgH=pdfW*(canvas.height/canvas.width);
-    if(imgH<=pdfH){
-      pdf.addImage(imgData,'JPEG',0,0,pdfW,imgH);
-    }else{
-      let y=0;
-      while(y<imgH){
-        if(y>0)pdf.addPage();
-        pdf.addImage(imgData,'JPEG',0,-y,pdfW,imgH);
-        y+=pdfH;
-      }
-    }
+    const W=pdf.internal.pageSize.getWidth();
+    const H=pdf.internal.pageSize.getHeight();
+
+    const addCanvas=(c)=>{
+      const img=c.toDataURL('image/jpeg',0.97);
+      const h=W*(c.height/c.width);
+      if(h<=H){pdf.addImage(img,'JPEG',0,0,W,h);}
+      else{let y=0;while(y<h){if(y>0)pdf.addPage();pdf.addImage(img,'JPEG',0,-y,W,h);y+=H;}}
+    };
+
+    addCanvas(c1);
+    pdf.addPage();
+    addCanvas(c2);
+
     const num=(document.getElementById('q-num').value||'quotation').replace(/[^a-zA-Z0-9\-_]/g,'_');
     const cname=(document.getElementById('q-cname').value||'client').split(' ')[0];
     pdf.save(`Ravvarnix_${num}_${cname}.pdf`);
