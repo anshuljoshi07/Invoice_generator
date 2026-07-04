@@ -1072,16 +1072,18 @@ async function downloadPDF(){
     const page2El=page.querySelector('.pdf-page2');
     const opts={scale:2,useCORS:true,allowTaint:true,backgroundColor:'#ffffff'};
 
-    // ── Page 1: hide the page-2 block, capture the rest ──────
+    // ── Page 1: hide page-2 block, neutralise min-height so
+    //    the canvas height matches actual content, not 1123px ─
     page2El.style.display='none';
+    page.style.minHeight='0';
     const c1=await html2canvas(page,opts);
+    page.style.minHeight='';
     page2El.style.display='';
 
-    // ── Page 2: render .pdf-page2 content in an off-screen
-    //    wrapper that inherits all .pdf-page styling ──────────
+    // ── Page 2: off-screen ghost, no forced min-height ───────
     const ghost=document.createElement('div');
     ghost.className='pdf-page';
-    ghost.style.cssText='position:fixed;top:-9999px;left:0;z-index:-1;';
+    ghost.style.cssText='position:fixed;top:-9999px;left:0;z-index:-1;min-height:0;';
     ghost.innerHTML=page2El.innerHTML;
     document.body.appendChild(ghost);
     await new Promise(r=>setTimeout(r,200));
@@ -1093,12 +1095,17 @@ async function downloadPDF(){
     const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
     const W=pdf.internal.pageSize.getWidth();
     const H=pdf.internal.pageSize.getHeight();
+    const TOL=1; // 1 mm tolerance against floating-point overshoot
 
     const addCanvas=(c)=>{
       const img=c.toDataURL('image/jpeg',0.97);
       const h=W*(c.height/c.width);
-      if(h<=H){pdf.addImage(img,'JPEG',0,0,W,h);}
-      else{let y=0;while(y<h){if(y>0)pdf.addPage();pdf.addImage(img,'JPEG',0,-y,W,h);y+=H;}}
+      if(h<=H+TOL){
+        pdf.addImage(img,'JPEG',0,0,W,Math.min(h,H));
+      }else{
+        let y=0;
+        while(y<h-TOL){if(y>0)pdf.addPage();pdf.addImage(img,'JPEG',0,-y,W,h);y+=H;}
+      }
     };
 
     addCanvas(c1);
