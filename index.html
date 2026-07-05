@@ -351,9 +351,14 @@ input.err{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(220,38,38,
 /* A4 sheet */
 .pdf-page{
   background:#fff;width:794px;min-height:1123px;margin:0 auto;
-  padding:50px 52px 60px 52px;
-  box-shadow:0 4px 20px rgba(0,0,0,.3),inset 0 0 0 18px #fff,inset 0 0 0 19.5px #1C1C1C;
+  padding:18px;
+  box-shadow:0 4px 20px rgba(0,0,0,.3);
   font-family:'Times New Roman',Times,serif;color:#1a1a1a;font-size:10pt;
+}
+.pdf-border-frame{
+  border:1.5px solid #1C1C1C;
+  padding:32px 34px 42px 34px;
+  min-height:calc(1123px - 36px);
 }
 
 /* PDF header */
@@ -811,7 +816,49 @@ input.err{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(220,38,38,
             </div>
           </div>
 
-          <div class="sec-label">D — Estimate Preview</div>
+          <div class="sec-label">D — Technical Specifications</div>
+          <div class="fgroup" style="margin-bottom:18px">
+            <div style="font-size:11px;color:var(--t2);margin-bottom:10px">Leave a field blank to omit that row from the quotation.</div>
+            <div style="font-size:11px;font-weight:600;color:var(--t1);margin-bottom:6px">Sr. 1 — SPV Panels</div>
+            <div class="row2">
+              <div class="field">
+                <label>Panel Brand</label>
+                <input type="text" id="q-s1-brand" placeholder="e.g. Rayzon/Equivalent">
+              </div>
+              <div class="field">
+                <label>Panel Wattage</label>
+                <input type="text" id="q-s1-watt" placeholder="e.g. 540wp/545wp">
+              </div>
+            </div>
+            <div class="row2">
+              <div class="field">
+                <label>No. of Panels</label>
+                <input type="text" id="q-s1-count" placeholder="e.g. 9">
+              </div>
+              <div class="field">
+                <label>Panel Category</label>
+                <input type="text" id="q-s1-cat" placeholder="e.g. Bifacial Half-Cut SPV modules">
+              </div>
+            </div>
+            <div style="font-size:11px;font-weight:600;color:var(--t1);margin:10px 0 6px">Sr. 2 — Inverter</div>
+            <div class="field">
+              <label>Inverter Brand</label>
+              <input type="text" id="q-s2-brand" placeholder="e.g. Ksolare / Polycab / Growatt / Equivalent">
+            </div>
+            <div style="font-size:11px;font-weight:600;color:var(--t1);margin:10px 0 6px">Sr. 8 — Manufacturer Warranty</div>
+            <div class="row2">
+              <div class="field">
+                <label>SPV Modules Warranty</label>
+                <input type="text" id="q-s8-spv" placeholder="e.g. 27-30 years linear performance">
+              </div>
+              <div class="field">
+                <label>Inverter Warranty</label>
+                <input type="text" id="q-s8-inv" placeholder="e.g. 10 years">
+              </div>
+            </div>
+          </div>
+
+          <div class="sec-label">E — Estimate Preview</div>
           <div class="est-block" style="margin-bottom:16px">
             <div class="est-head">Cost Breakdown</div>
             <div class="est-row"><span class="e-lbl">Base Amount</span><span class="e-val" id="q-obase">—</span></div>
@@ -821,22 +868,34 @@ input.err{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(220,38,38,
             <div class="est-row total"><span class="e-lbl">Effective Cost</span><span class="e-val" id="q-ototal">—</span></div>
           </div>
 
-          <div class="sec-label">E — Advance Payment &amp; Dues</div>
-          <div class="form-row">
-            <div class="f-group" style="max-width:160px">
-              <label class="f-label">Advance %</label>
-              <input type="number" id="q-advpct" value="50" step="5" min="0" max="100" oninput="calcQ()">
+          <div class="sec-label">F — Advance Payment &amp; Dues</div>
+          <div class="form-row" style="gap:12px">
+            <div class="f-group" style="max-width:200px">
+              <label class="f-label">Advance Amount (₹)</label>
+              <input type="number" id="q-advamt" placeholder="0" min="0" oninput="calcQ()">
+            </div>
+            <div class="f-group" style="max-width:200px">
+              <label class="f-label">Mode of Payment</label>
+              <select id="q-paymode" style="height:36px;border:1px solid var(--border-md);border-radius:6px;padding:0 10px;font-size:13px;background:#fff;color:var(--t1);width:100%">
+                <option>Cash</option>
+                <option>Cheque</option>
+                <option>NEFT / RTGS</option>
+                <option>UPI</option>
+                <option>Bank Transfer</option>
+              </select>
             </div>
           </div>
           <div class="est-block" style="margin-bottom:16px">
             <div class="est-head">Payment Schedule</div>
-            <div class="est-row"><span class="e-lbl" id="q-oadv-l">Advance at Registration (50%)</span><span class="e-val" id="q-oadv">—</span></div>
+            <div class="est-row"><span class="e-lbl" id="q-oadv-l">Advance at Registration</span><span class="e-val" id="q-oadv">—</span></div>
             <div class="est-row total"><span class="e-lbl">Balance Due (before dispatch)</span><span class="e-val" id="q-obal">—</span></div>
           </div>
 
-          <div style="display:flex;gap:8px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn-ghost" style="flex:1;padding:9px 0;font-size:12px">Save Draft</button>
-            <button class="btn-ghost" style="flex:1;padding:9px 0;font-size:12px" onclick="openPreview()">Preview PDF</button>
+            <button class="btn-ghost" style="flex:1;padding:9px 0;font-size:12px" onclick="openPreview('quotation')">Preview Quotation</button>
+            <button class="btn-ghost" style="flex:1;padding:9px 0;font-size:12px" onclick="openPreview('invoice')">Preview Invoice</button>
+            <button class="btn-ghost" style="flex:1;padding:9px 0;font-size:12px" onclick="openPreview('receipt')">Generate Receipt</button>
             <button class="btn-gen" style="flex:2;margin-top:0" onclick="openSendModal()">
               Generate &amp; Send
             </button>
@@ -988,12 +1047,11 @@ function calcQ(){
   if(isSub&&sub){sr.style.display='flex';sv('q-osub','− '+inr(sub));}
   else sr.style.display='none';
   // Advance & dues
-  const advPct=+document.getElementById('q-advpct').value||50;
   const finalAmt=base?eff:0;
-  const advAmt=finalAmt*(advPct/100);
+  const advAmt=+document.getElementById('q-advamt').value||0;
   const bal=finalAmt-advAmt;
-  document.getElementById('q-oadv-l').textContent=`Advance at Registration (${advPct}%)`;
-  sv('q-oadv',finalAmt?inr(advAmt):'—');
+  document.getElementById('q-oadv-l').textContent='Advance at Registration';
+  sv('q-oadv',advAmt?inr(advAmt):'—');
   sv('q-obal',finalAmt?inr(bal):'—');
 }
 
@@ -1064,7 +1122,7 @@ function closeModal(id){document.getElementById(id).classList.remove('open')}
 async function downloadPDF(){
   const modal=document.getElementById('pdf-modal');
   const wasOpen=modal.classList.contains('open');
-  if(!wasOpen)openPreview();
+  if(!wasOpen)openPreview(_previewDocType);
   await new Promise(r=>setTimeout(r,600));
   const btn=document.getElementById('btn-dl');
   btn.disabled=true;btn.textContent='Generating…';
@@ -1072,46 +1130,46 @@ async function downloadPDF(){
     const page=document.getElementById('pdf-content');
     const page2El=page.querySelector('.pdf-page2');
 
-    // Measure split point BEFORE altering anything
-    const splitY=page2El.getBoundingClientRect().top - page.getBoundingClientRect().top;
+    // Measure split BEFORE removing min-height
+    const splitY=page2El?(page2El.getBoundingClientRect().top - page.getBoundingClientRect().top):null;
 
-    // Single render — remove forced min-height so canvas = real content height
     page.style.minHeight='0';
     const full=await html2canvas(page,{scale:2,useCORS:true,allowTaint:true,backgroundColor:'#ffffff'});
     page.style.minHeight='';
 
-    // Slice the canvas at the split point
-    const scale=2;
-    const splitPx=Math.round(splitY*scale);
-    const slice=(y0,h)=>{
-      const c=document.createElement('canvas');
-      c.width=full.width; c.height=h;
-      c.getContext('2d').drawImage(full,0,y0,full.width,h,0,0,full.width,h);
-      return c;
-    };
-    const c1=slice(0, splitPx);
-    const c2=slice(splitPx, full.height-splitPx);
-
-    // Build PDF — one A4 page per canvas slice
     const {jsPDF}=window.jspdf;
     const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
     const W=pdf.internal.pageSize.getWidth();
     const H=pdf.internal.pageSize.getHeight();
 
-    const addCanvas=(c)=>{
-      const img=c.toDataURL('image/jpeg',0.97);
-      const h=W*(c.height/c.width);
-      // Fit to page; if slice is taller than A4 (unusual), let it overflow naturally
+    if(splitY!==null){
+      // Two-page doc: slice at .pdf-page2
+      const splitPx=Math.round(splitY*2);
+      const slice=(y0,h)=>{
+        const c=document.createElement('canvas');
+        c.width=full.width;c.height=h;
+        c.getContext('2d').drawImage(full,0,y0,full.width,h,0,0,full.width,h);
+        return c;
+      };
+      const addCanvas=(c)=>{
+        const img=c.toDataURL('image/jpeg',0.97);
+        const h=W*(c.height/c.width);
+        pdf.addImage(img,'JPEG',0,0,W,Math.min(h,H));
+      };
+      addCanvas(slice(0,splitPx));
+      pdf.addPage();
+      addCanvas(slice(splitPx,full.height-splitPx));
+    }else{
+      // Single-page doc (receipt)
+      const img=full.toDataURL('image/jpeg',0.97);
+      const h=W*(full.height/full.width);
       pdf.addImage(img,'JPEG',0,0,W,Math.min(h,H));
-    };
+    }
 
-    addCanvas(c1);
-    pdf.addPage();
-    addCanvas(c2);
-
-    const num=(document.getElementById('q-num').value||'quotation').replace(/[^a-zA-Z0-9\-_]/g,'_');
+    const num=(document.getElementById('q-num').value||'doc').replace(/[^a-zA-Z0-9\-_]/g,'_');
     const cname=(document.getElementById('q-cname').value||'client').split(' ')[0];
-    pdf.save(`Ravvarnix_${num}_${cname}.pdf`);
+    const prefix=_previewDocType==='receipt'?'Receipt':_previewDocType==='invoice'?'Invoice':'Quotation';
+    pdf.save(`Ravvarnix_${prefix}_${num}_${cname}.pdf`);
   }finally{
     btn.disabled=false;btn.textContent='↓ Download PDF';
     if(!wasOpen)closeModal('pdf-modal');
@@ -1131,8 +1189,7 @@ function sendInvoice(){
   const sub=isSub?(+document.getElementById('q-subamt').value||0):0;
   const base=cap*rate,gstAmt=base*gst/100,net=base+gstAmt,eff=net-sub;
   const amt=inr(base?eff:0);
-  const advPct=+document.getElementById('q-advpct').value||50;
-  const advAmt=inr((base?eff:0)*(advPct/100));
+  const advAmt=inr(+document.getElementById('q-advamt').value||0);
 
   const emailSubject=encodeURIComponent(`Solar Quotation ${num} — Ravvarnix Renewable Energy`);
   const emailBody=encodeURIComponent(
@@ -1145,7 +1202,7 @@ Your solar project quotation is ready:
   Quotation No : ${num}
   Capacity     : ${cap} kW
   Effective Cost: ${amt}
-  Advance (${advPct}%): ${advAmt}
+  Advance: ${advAmt}
 
 Please feel free to reach out with any questions.
 
@@ -1161,7 +1218,7 @@ Your solar project quotation from *Ravvarnix Solar* is ready!
 📋 *Quotation No:* ${num}
 ⚡ *Capacity:* ${cap} kW
 💰 *Total Cost:* ${amt}
-✅ *Advance (${advPct}%):* ${advAmt}
+✅ *Advance:* ${advAmt}
 
 For queries: 9691977558
 📧 ravvarnixsolar@gmail.com
@@ -1183,7 +1240,9 @@ _Ravvarnix Renewable Energy Innovations OPC Pvt Ltd_`);
 }
 
 // ── PDF Preview ───────────────────────────────────────────────
-function openPreview(){
+let _previewDocType='quotation';
+function openPreview(docType='quotation'){
+  _previewDocType=docType;
   const num=document.getElementById('q-num').value||'—';
   const date=document.getElementById('q-date').value||'—';
   const cname=document.getElementById('q-cname').value||'—';
@@ -1195,13 +1254,96 @@ function openPreview(){
   const gst=+document.getElementById('q-gst').value||0;
   const isSub=document.getElementById('q-sub').checked;
   const sub=isSub?(+document.getElementById('q-subamt').value||0):0;
-  const advPct=+document.getElementById('q-advpct').value||50;
+  const advAmt=+document.getElementById('q-advamt').value||0;
   const base=cap*rate,gstAmt=base*gst/100,net=base+gstAmt,eff=net-sub;
   const finalAmt=base?eff:0;
-  const advAmt=finalAmt*(advPct/100);
   const balAmt=finalAmt-advAmt;
-
+  // Spec overrides
+  const s1brand=document.getElementById('q-s1-brand').value.trim();
+  const s1watt=document.getElementById('q-s1-watt').value.trim();
+  const s1count=document.getElementById('q-s1-count').value.trim();
+  const s1cat=document.getElementById('q-s1-cat').value.trim();
+  const s2brand=document.getElementById('q-s2-brand').value.trim();
+  const s8spv=document.getElementById('q-s8-spv').value.trim();
+  const s8inv=document.getElementById('q-s8-inv').value.trim();
+  // Build Sr.1 rows
+  const s1rows=[s1brand?{s:'Panel brand',v:s1brand}:null,s1watt?{s:'Panel wattage',v:s1watt}:null,s1count?{s:'No. of panels',v:s1count}:null,s1cat?{s:'Panel category',v:s1cat}:null].filter(Boolean);
+  let s1html='';
+  if(s1rows.length){s1html=`<tr><td class="center" rowspan="${s1rows.length}">1</td><td class="cat-cell" rowspan="${s1rows.length}">SPV panels</td><td>${s1rows[0].s}</td><td>${s1rows[0].v}</td></tr>`;for(let i=1;i<s1rows.length;i++)s1html+=`<tr><td>${s1rows[i].s}</td><td>${s1rows[i].v}</td></tr>`;}
+  // Build Sr.2 row
+  const s2html=s2brand?`<tr><td class="center">2</td><td class="cat-cell">Inverter</td><td>Inverter brand</td><td>${s2brand}</td></tr>`:'';
+  // Build Sr.8 rows
+  const s8rows=[s8spv?{s:'SPV modules',v:s8spv}:null,s8inv?{s:'Inverter',v:s8inv}:null].filter(Boolean);
+  let s8html='';
+  if(s8rows.length){s8html=`<tr><td class="center" rowspan="${s8rows.length}">8</td><td class="cat-cell" rowspan="${s8rows.length}">Manufacturer Warranty</td><td>${s8rows[0].s}</td><td>${s8rows[0].v}</td></tr>`;for(let i=1;i<s8rows.length;i++)s8html+=`<tr><td>${s8rows[i].s}</td><td>${s8rows[i].v}</td></tr>`;}
+  const docTitle=docType==='invoice'?'INVOICE':'Quotation';
   const N=n=>n?Math.round(n).toLocaleString('en-IN'):'—';
+
+  // ── Receipt layout ───────────────────────────────────────────
+  if(docType==='receipt'){
+    const payMode=document.getElementById('q-paymode').value;
+    document.getElementById('pdf-title').textContent=`Receipt — ${num}`;
+    document.getElementById('pdf-content').innerHTML=`
+    <div class="pdf-border-frame" style="min-height:calc(1123px - 36px)">
+      <div class="pdf-header">
+        <img class="pdf-logo-img" src="assets/logo.jpeg" alt="Ravvarnix Solar">
+        <div class="pdf-company-details">
+          <strong>Ravvarnix Renewable Energy Innovations OPC Pvt Ltd</strong>
+          Old SBI Road, Near Post Office, Ram Nagar, Supela, Bhilai – 490023<br>
+          GST No.: 22AAPCR5712G1ZF | ravvarnixsolar@gmail.com | Contact: 9691977558
+        </div>
+      </div>
+      <div class="pdf-doc-title">PAYMENT RECEIPT</div>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:9.5pt;font-family:'Times New Roman',Times,serif">
+        <tr>
+          <td style="padding:3px 0;vertical-align:top;width:50%"><strong>Receipt No.:</strong>&nbsp;${num}</td>
+          <td style="padding:3px 0;vertical-align:top;text-align:right"><strong>Date:</strong>&nbsp;${date}</td>
+        </tr>
+        <tr>
+          <td style="padding:3px 0;vertical-align:top"><strong>Received From:</strong>&nbsp;${cname}</td>
+          <td style="padding:3px 0;vertical-align:top;text-align:right"><strong>Phone:</strong>&nbsp;${cphone}</td>
+        </tr>
+        ${caddr&&caddr!=='—'?`<tr><td colspan="2" style="padding:3px 0"><strong>Address:</strong>&nbsp;${caddr}</td></tr>`:''}
+      </table>
+      <div style="border-top:2px solid var(--pa);margin-bottom:14px"></div>
+      ${cap?`<div style="background:var(--pa-lt);border:1px solid var(--pa-bd);border-radius:4px;padding:9px 14px;margin-bottom:14px;font-size:9.5pt;font-family:'Times New Roman',Times,serif"><strong>Project:</strong>&nbsp;Solar PV System — ${cap} kW${isSub?' (PM Surya Ghar Subsidy)':''}</div>`:''}
+      <table style="width:100%;border-collapse:collapse;font-size:9.5pt;font-family:'Times New Roman',Times,serif;margin-bottom:4px">
+        <thead><tr style="background:var(--pa);color:#fff"><th style="padding:6px 10px;text-align:left;font-weight:700">Particulars</th><th style="padding:6px 10px;text-align:right;font-weight:700">Amount (₹)</th></tr></thead>
+        <tbody>
+          ${base?`<tr style="border-bottom:1px solid var(--pa-bd)"><td style="padding:6px 10px">Base Amount</td><td style="padding:6px 10px;text-align:right">${N(base)}</td></tr>`:''}
+          ${base?`<tr style="border-bottom:1px solid var(--pa-bd)"><td style="padding:6px 10px">GST (${gst}%)</td><td style="padding:6px 10px;text-align:right">${N(gstAmt)}</td></tr>`:''}
+          ${base?`<tr style="border-bottom:1px solid var(--pa-bd);font-weight:600"><td style="padding:6px 10px">Net Payable</td><td style="padding:6px 10px;text-align:right">${N(net)}</td></tr>`:''}
+          ${isSub&&sub>0?`<tr style="border-bottom:1px solid var(--pa-bd);color:#2e7d32"><td style="padding:6px 10px">Less: MNRE Subsidy</td><td style="padding:6px 10px;text-align:right">(${N(sub)})</td></tr>`:''}
+          ${isSub&&sub>0?`<tr style="background:var(--pa-lt);font-weight:700;border-bottom:2px solid var(--pa)"><td style="padding:6px 10px">Effective Cost</td><td style="padding:6px 10px;text-align:right">${N(eff)}</td></tr>`:''}
+        </tbody>
+      </table>
+      <div style="border-top:1.5px solid var(--pa-bd);margin:16px 0"></div>
+      <table style="width:100%;border-collapse:collapse;font-size:9.5pt;font-family:'Times New Roman',Times,serif">
+        <tr style="background:var(--pa);color:#fff">
+          <td style="padding:8px 12px;font-weight:700;font-size:10.5pt">AMOUNT RECEIVED (ADVANCE)</td>
+          <td style="padding:8px 12px;text-align:right;font-weight:700;font-size:10.5pt">₹ ${N(advAmt)||'—'}</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--pa-bd)">
+          <td style="padding:7px 12px">Mode of Payment</td>
+          <td style="padding:7px 12px;text-align:right">${payMode}</td>
+        </tr>
+        <tr style="font-weight:600;background:var(--pa-lt)">
+          <td style="padding:7px 12px">Balance Due (before dispatch)</td>
+          <td style="padding:7px 12px;text-align:right">₹ ${N(balAmt)||'—'}</td>
+        </tr>
+      </table>
+      <div style="margin-top:22px;font-size:8pt;color:#888;font-style:italic;text-align:center;font-family:'Times New Roman',Times,serif">
+        This is a computer-generated document. Valid without physical signature for digital copies.
+      </div>
+      <div class="pdf-sign">
+        <strong>Authorized Signatory</strong><br>
+        Ravvarnix Renewable Energy Innovations (OPC) Pvt. Ltd.
+      </div>
+    </div>`;
+    document.getElementById('pdf-modal').classList.add('open');
+    return;
+  }
+
   const capLabel=cap?cap+' kW':'—';
   const subsidyRow=(isSub && sub>0)?`
     <tr>
@@ -1218,6 +1360,7 @@ function openPreview(){
 
   document.getElementById('pdf-title').textContent=`Preview — ${num}`;
   document.getElementById('pdf-content').innerHTML=`
+  <div class="pdf-border-frame">
     <!-- Header -->
     <div class="pdf-header">
       <img class="pdf-logo-img" src="assets/logo.jpeg" alt="Ravvarnix Solar">
@@ -1246,7 +1389,7 @@ function openPreview(){
     </div>
 
     <!-- Document title -->
-    <div class="pdf-doc-title">Quotation</div>
+    <div class="pdf-doc-title">${docTitle}</div>
 
     <!-- Estimate -->
     <div class="pdf-section-title">ESTIMATE</div>
@@ -1277,15 +1420,12 @@ function openPreview(){
     </table>
 
     <!-- Specs -->
-    <div class="pdf-specs-title">PRICE INCLUSIONS AND TECHNICAL SPECIFICATIONS</div>
+    <div class="pdf-specs-title">TECHNICAL SPECIFICATIONS</div>
     <table class="pdf-specs-table">
       <thead><tr><th>Sr. No.</th><th>Particulars</th><th>Specification</th><th>Description</th></tr></thead>
       <tbody>
-        <tr><td class="center" rowspan="4">1</td><td class="cat-cell" rowspan="4">SPV panels</td><td>Panel brand</td><td>Rayzon/Equivalent</td></tr>
-        <tr><td>Panel wattage</td><td>540wp/545wp</td></tr>
-        <tr><td>No. of panels</td><td>9</td></tr>
-        <tr><td>Panel category</td><td>Bifacial Half-Cut SPV modules</td></tr>
-        <tr><td class="center">2</td><td class="cat-cell">Inverter</td><td>Inverter brand</td><td>Ksolare / Polycab / Growatt / Equivalent</td></tr>
+        ${s1html}
+        ${s2html}
         <tr><td class="center" rowspan="2">3</td><td class="cat-cell" rowspan="2">Cabling</td><td>Cable brand</td><td>Apar / Polycab / Equivalent</td></tr>
         <tr><td>Cable specifications</td><td>Cable lengths are assumed and may change as per site requirement</td></tr>
         <tr><td class="center">4</td><td class="cat-cell">Junction Box</td><td>ACDB, DCDB and junction boxes</td><td>Reputed make along with installation accessories</td></tr>
@@ -1293,8 +1433,7 @@ function openPreview(){
         <tr><td><strong>Structure height (approx)</strong></td><td><strong>Structure height up to 5 feet</strong></td></tr>
         <tr><td class="center">6</td><td class="cat-cell">Earthing</td><td>Earthing and LA</td><td>Earthing (3 rods) and LA as per the govt. tender norms</td></tr>
         <tr><td class="center">7</td><td class="cat-cell">Installation</td><td>One time installation</td><td>Top quality and clean installation work</td></tr>
-        <tr><td class="center" rowspan="2">8</td><td class="cat-cell" rowspan="2">Manufacturer Warranty</td><td>SPV modules</td><td>27-30 years linear performance</td></tr>
-        <tr><td>Inverter</td><td>10 years</td></tr>
+        ${s8html}
       </tbody>
     </table>
 
@@ -1315,7 +1454,7 @@ function openPreview(){
         <tr><td class="td-num">2</td><td><strong>Freight charges extra. Meter in Discom's scope, will be provided by CSEB/CSPDCL.</strong></td></tr>
         <tr><td class="td-num">3</td><td><strong>GST</strong> – Prevailing GST rate @ ${gst}% is considered. Any change in GST rates shall be effected at the time of final invoice.</td></tr>
         <tr><td class="td-num">4</td><td><strong>Delivery Schedule</strong> – Installation will be completed in 4–8 weeks from the date of acceptance of your Purchase Order along with advance amount.</td></tr>
-        <tr><td class="td-num">5</td><td><strong>Payment Terms</strong><br>50% Advance at time of registration<br>50% Balance payment against readiness of material prior to dispatch</td></tr>
+        <tr><td class="td-num">5</td><td><strong>Payment Terms</strong><br>Advance ₹${N(advAmt)||'—'} at time of registration<br>Balance payment against readiness of material prior to dispatch</td></tr>
         <tr><td class="td-num">6</td><td><strong>Other terms &amp; conditions</strong> – This offer is valid for 1 week only. Installation capacity and cost may vary up to 5% depending on component availability.</td></tr>
         <tr><td class="td-num">7</td><td><strong>Subsidy disbursement</strong> – Subsidy amount is indicative and may change as per Government norms. Subsidy shall be claimed directly by client from MNRE/CSEB.</td></tr>
         <tr><td class="td-num">8</td><td><strong>Customer Scope</strong> – Regular cleaning of PV modules; insurance of PV Solar system by client; safe storage and access to site.</td></tr>
@@ -1331,7 +1470,7 @@ function openPreview(){
         <td class="right">₹${N(finalAmt)||'—'}</td>
       </tr>
       <tr>
-        <td>${advPct}% Advance at time of registration</td>
+        <td>Advance at time of registration</td>
         <td class="right">₹${N(advAmt)||'—'}</td>
       </tr>
       <tr>
@@ -1346,6 +1485,7 @@ function openPreview(){
       Ravvarnix, Renewable Energy Innovations (OPC) Pvt. Ltd.
     </div>
     </div><!-- /pdf-page2 -->
+  </div><!-- /pdf-border-frame -->
   `;
 
   document.getElementById('pdf-modal').classList.add('open');
